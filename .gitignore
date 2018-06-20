@@ -1,0 +1,5 @@
+node_modules/**
+.npmignore
+**/node_modules/**
+test/build.js
+test/build.js.map

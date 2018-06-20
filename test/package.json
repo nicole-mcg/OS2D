@@ -1,0 +1,18 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "test OS2D",
+  "main": "test.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "webpack": "webpack --watch",
+    "serve": "serve ."
+  },
+  "author": "",
+  "devDependencies": {
+    "babel-env": "^2.4.1",
+    "babel-preset-env": "^1.7.0",
+    "webpack": "^4.11.0",
+    "webpack-cli": "^3.0.2"
+  }
+}
