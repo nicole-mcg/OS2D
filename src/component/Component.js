@@ -19,6 +19,8 @@ export class Component {
 
         this._game = null;
         this._gameObject = null;
+
+        this._enabled = true;
     }
 
     get name() {
@@ -37,6 +39,16 @@ export class Component {
         return this._gameObject;
     }
 
+    get enabled() {
+        return this._enabled;
+    }
+
+    set enabled(enabled) {
+
+        console.log("...")
+        this._enabled = enabled;
+    }
+
     addedToGameObject(game, gameObject) {
         this._game = game;
         this._gameObject = gameObject;
@@ -52,37 +64,37 @@ export class Component {
     }
 
     preprocess(game) {
-        if (this.onPreprocess !== undefined && this.onPreprocess !== null) {
+        if (this._enabled && this.onPreprocess !== undefined && this.onPreprocess !== null) {
             this.onPreprocess.bind(this)(game);
         }
     }
 
     process(game) {
-        if (this.onProcess !== undefined && this.onProcess !== null) {
+        if (this._enabled && this.onProcess !== undefined && this.onProcess !== null) {
             this.onProcess.bind(this)(game);
         }
     }
 
     postprocess(game) {
-        if (this.onPostprocess !== undefined && this.onPostprocess !== null) {
+        if (this._enabled && this.onPostprocess !== undefined && this.onPostprocess !== null) {
             this.onPostprocess.bind(this)(game);
         }
     }
 
     predraw(game, ctx) {
-        if (this.onPredraw !== undefined && this.onPredraw !== null) {
+        if (this._enabled && this.onPredraw !== undefined && this.onPredraw !== null) {
             this.onPredraw.bind(this)(game, ctx);
         }
     }
 
     draw(game, ctx) {
-        if (this.onDraw !== undefined && this.onDraw !== null) {
+        if (this._enabled && this.onDraw !== undefined && this.onDraw !== null) {
             this.onDraw.bind(this)(game, ctx);
         }
     }
 
     postdraw(game, ctx) {
-        if (this.onPostdraw !== undefined && this.onPostdraw !== null) {
+        if (this._enabled && this.onPostdraw !== undefined && this.onPostdraw !== null) {
             this.onPostdraw.bind(this)(game, ctx);
         }
     }

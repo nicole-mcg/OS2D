@@ -22,11 +22,11 @@ export class RegularPolygon extends Shape {
         var internalAngle = (numSides - 2) * Math.PI / (numSides * 2);
 
         var distance = size / 2;
-        var currAngle = -Math.PI/2;
+        var currAngle = Math.PI/2;
 
         for (var i = 0; i < numSides; i++) {
-            x = distance * Math.cos(currAngle);
-            y = distance * Math.sin(currAngle);
+            x = distance * Math.cos(-currAngle);
+            y = -distance * Math.sin(-currAngle);
 
             vertices.push({x: x, y: y});
 
@@ -65,11 +65,11 @@ export class RegularPolygon extends Shape {
 
             q[i] = {
                 x: p.x * c - p.y * s,
-                y: p.x * s + p.y * c
+                y: -p.x * s - p.y * c
             }
         }
 
-        this.q = q;
+        //this.q = q;
 
         //console.log(distanceFromCenter)
 
@@ -97,8 +97,8 @@ export class RegularPolygon extends Shape {
 
 
         ctx.moveTo((vertices[0].x + x) / scaleRatio, (vertices[0].y + y) / scaleRatio);
-        var c = Math.cos(rotation);
-        var s = Math.sin(rotation);
+        var c = Math.cos(-rotation);
+        var s = Math.sin(-rotation);
         for (var i = 0; i < numSides; i++) {
             var p = vertices[i];
             
@@ -112,16 +112,16 @@ export class RegularPolygon extends Shape {
 
         ctx.closePath();
 
-        ctx.fill();
+        
 
-        if (this.q !== undefined && this.q !== null) {
+        /*if (this.q !== undefined && this.q !== null) {
             var fill = ctx.fillStyle;
             ctx.fillStyle = "green";
             for (var i = 0; i < this.q.length; i++) {
                 ctx.fillRect((this.q[i].x + x) / scaleRatio - 1, (this.q[i].y + y) / scaleRatio - 1, 3, 3)
             }
             ctx.fillStyle = fill;
-        }
+        }*/
     }
 
     getRotated(rotation) {

@@ -36,9 +36,7 @@ export class Game extends GameObjectContainer {
         canvas.addEventListener("mousedown", this.handleMouseDown.bind(this));
         canvas.addEventListener("mouseup", this.handleMouseUp.bind(this));
 
-        canvas.addEventListener("click", this.handleClick.bind(this));
-
-        this._world = planck.World(planck.Vec2(0.0, 9.8));
+        this._world = planck.World(planck.Vec2(0.0, -9.8));
 
         this._world.on('remove-fixture', function(fixture) {
             console.log(fixture);
@@ -70,6 +68,14 @@ export class Game extends GameObjectContainer {
         return this._scaleRatio;
     }
 
+    get screenWidth() {
+        return this._screenWidth;
+    }
+
+    get screenHeight() {
+        return this._screenHeight;
+    }
+
     get mouseX() {
         return this._mouseX;
     }
@@ -90,12 +96,18 @@ export class Game extends GameObjectContainer {
         this._canvas.style.cursor = cursor;
     }
 
-    worldCoordToScreen(xOrY) {
-        return xOrY / this._scaleRatio;
+    worldCoordToScreen(p) {
+        return {
+            x: p.x / this._scaleRatio,
+            y: p.y / this._scaleRatio
+        };
     }
 
-    screenCoordToWorld(xOrY) {
-        return xOrY * this._scaleRatio;
+    screenCoordToWorld(p) {
+        return {
+            x: p.x * this._scaleRatio,
+            y: p.y * this._scaleRatio
+        };
     }
 
     canvasToScreenPoint(p) {
@@ -105,50 +117,34 @@ export class Game extends GameObjectContainer {
         }
     }
 
-    handleClick(e) {
-
-        var p = this.canvasToScreenPoint({
-            x: e.clientX,
-            y: e.clientY
-        })
-
-        this._children.forEach((child) => {
-
-            var collider = child.getComponent("collider");
-
-            // Mouse is inside collider
-            if (collider != null && collider.shape != null && collider.shape.contains(child.x, child.y, child.rotation, this.screenCoordToWorld(this._mouseX), this.screenCoordToWorld(this._mouseY))) {
-
-                if (child.onClick != null) {
-                    child.onClick();
-                }
-
-            }
-
-        })
-
-    }
 
     handleMouseMove(e) {
 
         var p = this.canvasToScreenPoint({
             x: e.clientX,
-            y: e.clientY
+            y: this._canvas.clientHeight - e.clientY
         })
 
         this._mouseX = p.x;
         this._mouseY = p.y;
 
-        if (this._clickedObject !== null) {
+        if (this._clickedObject !== null && this._clickedObject.onDrag !== undefined && this._clickedObject.onDrag !== null) {
+
             this._clickedObject.onDrag(this);
         }
 
     }
 
     handleMouseDown(e) {
+        console.log("mouse down")
 
         if (this._hoveredObject !== null) {
             this._clickedObject = this._hoveredObject;
+
+            var physicsBody = this._clickedObject.getComponent("physicsbody");
+            if (physicsBody !== null) {
+                physicsBody.forcePos = true;
+            }
 
             if (this._hoveredObject.onMouseDown !== undefined && this._hoveredObject.onMouseDown !== null) {
                 this._hoveredObject.onMouseDown(this);
@@ -159,8 +155,21 @@ export class Game extends GameObjectContainer {
 
     handleMouseUp(e) {
 
+        if (this._clickedObject !== null ) {
+
+            var physicsBody = this._clickedObject.getComponent("physicsbody");
+            if (physicsBody !== null) {
+                physicsBody.forcePos = false;
+            }
+
+            if (this._clickedObject === this._hoveredObject && this._clickedObject.onClick !== undefined && this._clickedObject.onClick !== null) {
+                this._clickedObject.onClick(this);
+            }
+        }
+
         this._clickedObject = null;
 
+        console.log("mouseu p")
         if (this._hoveredObject !== null && this._hoveredObject.onMouseUp !== undefined && this._hoveredObject.onMouseUp !== null) {
             this._hoveredObject.onMouseUp(this);
         }
@@ -168,7 +177,6 @@ export class Game extends GameObjectContainer {
     }
 
     process(timestamp) {
-        this.cursor = "default";
         
         // Get time between frames
         this._timeDelta = timestamp - this._lastRender
@@ -178,13 +186,22 @@ export class Game extends GameObjectContainer {
             return;
         }
 
+        if (this._lastRender == 0) {
+            this._lastRender = timestamp;
+            window.requestAnimationFrame(this.process.bind(this))
+            return;
+        }
+
+        this.cursor = "default";
+
         this._hoveredObject = null;
         this._children.forEach((child) => {
 
             var collider = child.getComponent("collider");
+            var worldMouse = this.screenCoordToWorld({x: this._mouseX, y: this._mouseY});
 
             // Mouse is inside collider
-            if (collider != null && collider.shape != null && collider.shape.contains(child.x, child.y, child.rotation, this.screenCoordToWorld(this._mouseX), this.screenCoordToWorld(this._mouseY))) {
+            if (collider != null && collider.shape != null && collider.shape.contains(child.x, child.y, child.rotation, worldMouse.x, worldMouse.y)) {
                 this._hoveredObject = child;
             }
 
@@ -250,10 +267,8 @@ export class Game extends GameObjectContainer {
         var trueRatio = trueWidth / trueHeight;
 
         var widthLarger = false;
-        var excess = 0;
         if (trueRatio > this._screenSizeRatio) {
             widthLarger = true;
-        } else if (trueRatio < this._screenSizeRatio) {
         }
 
         var newWidth = widthLarger ? (height * trueRatio) : width;
@@ -262,13 +277,13 @@ export class Game extends GameObjectContainer {
         canvas.width = newWidth;
         canvas.height = newHeight;
 
-       
-
         this._offsetX = widthLarger ? (newWidth - width) / 2 : 0;
         this._offsetY = !widthLarger ? (newHeight - height) / 2 : 0;
 
-        this._drawX = this.screenCoordToWorld(this._offsetX);
-        this._drawY = this.screenCoordToWorld(this._offsetY);
+        var drawPos =  this.screenCoordToWorld({x: this._offsetX, y: this._offsetY});
+
+        this._drawX = drawPos.x;
+        this._drawY = drawPos.y;
 
         this._canvasWidthRatio = trueWidth / newWidth;
         this._canvasHeightRatio = trueHeight / newHeight;

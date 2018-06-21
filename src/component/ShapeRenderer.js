@@ -22,6 +22,16 @@ export class ShapeRenderer extends Component {
             this.color = params.color;
         }
 
+        this.outlineColor = "black";
+        if (Object.keys(params).includes("outlineColor")) {
+            this.outlineColor = params.outlineColor;
+        }
+
+        this.outlineWidth = 0;
+        if (Object.keys(params).includes("outlineWidth")) {
+            this.outlineWidth = params.outlineWidth;
+        }
+
        // super.onDraw = this._onDraw;
     }
 
@@ -32,7 +42,16 @@ export class ShapeRenderer extends Component {
         }
 
         if (this.shape != null) {
+            
+
             this.shape.draw(ctx, this.gameObject.drawX, this.gameObject.drawY, this.gameObject.rotation, game.scaleRatio);
+            ctx.fill();
+
+            if (this.outlineWidth != 0) {
+                ctx.strokeStyle = this.outlineColor;
+                ctx.lineWidth = this.outlineWidth;
+                ctx.stroke();
+            }
         }
 
     }

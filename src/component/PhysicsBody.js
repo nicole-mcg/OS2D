@@ -21,7 +21,9 @@ export class PhysicsBody extends Component {
         if (Object.keys(params).includes("bodyType")) {
             this.bodyType = params.bodyType;
         }
-        
+
+        this.forcePos = false;
+
         this.body = null;
         this.fixture = null;
 
@@ -45,7 +47,7 @@ export class PhysicsBody extends Component {
         var planckVertices = [];
         this.shape.vertices.forEach((vertex) => {
             var vec = new planck.Vec2()
-            vec.set(vertex.x, vertex.y);
+            vec.set(vertex.x, -vertex.y);
             planckVertices.push(vec)
         })
 
@@ -63,10 +65,15 @@ export class PhysicsBody extends Component {
     }
 
     onProcess(game) {
-        var pos = this.body.getPosition();
-        this._gameObject.x = pos.x;
-        this._gameObject.y = pos.y;
-        this._gameObject.rotation = this.body.getAngle();
+        if (!this.forcePos) {
+            var pos = this.body.getPosition();
+            this._gameObject.x = pos.x;
+            this._gameObject.y = pos.y;
+            this._gameObject.rotation = this.body.getAngle();
+        } else {
+            this.body.setLinearVelocity(planck.Vec2(0, 0));
+            this.body.setAngularVelocity(0)
+        }
     }
 
     static get name() {

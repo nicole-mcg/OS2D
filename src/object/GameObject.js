@@ -81,10 +81,11 @@ export class GameObject extends GameObjectContainer {
             return 0;
         }
 
-        var y = this.y;
+        var y = this.game.screenCoordToWorld({x: this.game.screenWidth, y: this.game.screenHeight}).y - this.y;
 
         if (this.parent != null) {
-            y += this.parent.drawY;
+            var temp = this.parent.drawY;
+            y += temp;
         }
 
         return y;
@@ -159,7 +160,7 @@ export class GameObject extends GameObjectContainer {
         if (physicsBody != null) {
             var pos = physicsBody.body.getPosition();
             pos.x = x;
-            //physicsBody.body.setPosition(rotation);
+            physicsBody.body.setPosition(pos);
         }
     }
 
@@ -170,7 +171,7 @@ export class GameObject extends GameObjectContainer {
         if (physicsBody != null) {
             var pos = physicsBody.body.getPosition();
             pos.y = y;
-            //physicsBody.body.setPosition(rotation);
+            physicsBody.body.setPosition(pos);
         }
     }
 
@@ -229,7 +230,13 @@ export class GameObject extends GameObjectContainer {
     }
 
     getComponent(componentName) {
-        return this._components[componentName];
+        var comp = this._components[componentName];
+        return comp === undefined ? null : comp;
+    }
+
+    hasComponent(componentName) {
+        var comp = this._components[componentName];
+        return comp !== undefined && comp !== null;
     }
 
     setPos(x, y) {
