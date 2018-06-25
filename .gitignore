@@ -1,6 +1,9 @@
 node_modules/**
 .npmignore
 **/node_modules/**
+
 test/build.js
 test/build.js.map
-test/*.json
+
+test/smart.json
+test/dumb.json
