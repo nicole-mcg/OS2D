@@ -1,9 +1,13 @@
-import { Game } from "../Game.js"
 import { GameObjectContainer } from "./GameObjectContainer.js"
+import { Component } from "../component/Component.js"
+
+import { Point } from "../geom/Point.js"
+
+import { deepSerialize, setProperties, loadFunctions } from "../tools/Serialize.js"
 
 export class GameObject extends GameObjectContainer {
 
-    constructor() {
+    constructor(params) {
         super();
 
         // private variables
@@ -11,37 +15,27 @@ export class GameObject extends GameObjectContainer {
         this._game = null;
         this._parent = null;
 
-        this._x = 0;
-        this._y = 0;
+        this._pos = new Point(0, 0);
         this._rotation = 0;
 
         this._width = 0;
         this._height = 0;
 
-        this._xSpeed = 0;
-        this._ySpeed = 0;
+        this._speed = new Point(0, 0);
 
         this._components = {};
 
+        this._state = {};
+
         // public variables
+        if (params) {
+            setProperties(this, params);
+        }
+        
+    }
 
-        /*
-        this.onClick = undefined;
-
-        this.onMouseDown = undefined;
-        this.onMouseUp = undefined;
-        this.onHover = undefined;
-
-        this.onDrag = undefined;
-
-        this.onPreprocess = undefined;
-        this.onProcess = undefined;
-        this.onPostprocess = undefined;
-
-        this.onPredraw = undefined;
-        this.onDraw = undefined;
-        this.onPostdraw = undefined;
-        */
+    get state() {
+        return this._state;
     }
 
     get game() {
@@ -52,52 +46,33 @@ export class GameObject extends GameObjectContainer {
         return this._parent;
     }
 
+    get pos() {
+        return this._pos;
+    }
+
     get x() {
-        return this._x;
+        return this._pos.x;
     }
 
     get y() {
-        return this._y;
+        return this._pos.y;
     }
 
-    get drawX() {
-
+    get drawPos() {
         if (this.game == null) {
-            return 0;
+            return new Point(0, 0);
         }
 
-        var x = this.x;
+        var pos = this.pos.setY(this.game.screenCoordToWorld(this.game.screenSize).y - this.y);
 
-        if (this.parent != null) {
-            x += this.parent.drawX;
+        if(this.parent != null) {
+            return pos.add(this.parent.drawPos);
         }
 
-        return x;
-    }
-
-    get drawY() {
-
-        if (this.game == null) {
-            return 0;
-        }
-
-        var y = this.game.screenCoordToWorld({x: this.game.screenWidth, y: this.game.screenHeight}).y - this.y;
-
-        if (this.parent != null) {
-            var temp = this.parent.drawY;
-            y += temp;
-        }
-
-        return y;
+        return pos;
     }
 
     get rotation() {
-
-        var physicsBody = this.getComponent("physicsbody");
-        if (physicsBody != null) {
-            return physicsBody.body.getAngle();
-        }
-
         return this._rotation;
     }
 
@@ -109,24 +84,16 @@ export class GameObject extends GameObjectContainer {
         return this._height;
     }
 
+    get speed() {
+        return this._speed;
+    }
+
     get xSpeed() {
-
-        var physicsBody = this.getComponent("physicsbody");
-        if (physicsBody != null) {
-            return physicsBody.body.getLinearVelocity().x;
-        }
-
-        return this._xSpeed;
+        return this.speed.x;
     }
 
     get ySpeed() {
-
-        var physicsBody = this.getComponent("physicsbody");
-        if (physicsBody != null) {
-            return physicsBody.body.getLinearVelocity().y;
-        }
-
-        return this._ySpeed;
+        return this.speed.y;
     }
 
     set game(game) {
@@ -134,6 +101,7 @@ export class GameObject extends GameObjectContainer {
         this._children.forEach((child) => {
             child.game = game;
         })
+
         Object.values(this._components).forEach((component) => {
             component.addedToGameObject(game, this);
         })
@@ -148,31 +116,28 @@ export class GameObject extends GameObjectContainer {
 
         if (parent.game != null) {
             this.game = parent.game;
-        } else if (parent instanceof Game) {
-            this.game = parent;
+        }
+        
+    }
+
+    set pos(p) {
+        this._pos = p;
+
+        var physicsBody = this.getComponent("physicsbody");
+        if (physicsBody) {
+            var pos = physicsBody.body.getPosition();
+            pos.x = p.x;
+            pos.y = p.y;
+            physicsBody.body.setPosition(pos);
         }
     }
 
     set x(x) {
-        this._x = x;
-
-        var physicsBody = this.getComponent("physicsbody");
-        if (physicsBody != null) {
-            var pos = physicsBody.body.getPosition();
-            pos.x = x;
-            physicsBody.body.setPosition(pos);
-        }
+        this.pos = this.pos.setX(x);
     }
 
     set y(y) {
-        this._y = y;
-
-        var physicsBody = this.getComponent("physicsbody");
-        if (physicsBody != null) {
-            var pos = physicsBody.body.getPosition();
-            pos.y = y;
-            physicsBody.body.setPosition(pos);
-        }
+        this.pos = this.pos.setY(y);
     }
 
     set width(width) {
@@ -187,46 +152,79 @@ export class GameObject extends GameObjectContainer {
         this._rotation = rotation;
 
         var physicsBody = this.getComponent("physicsbody");
-        if (physicsBody != null) {
+        if (physicsBody) {
             physicsBody.body.setAngle(rotation);
         }
     }
 
-    set xSpeed(xSpeed) {
-        this._xSpeed = xSpeed;
+    set speed(speed) {
+        this._speed = speed;
 
         var physicsBody = this.getComponent("physicsbody");
-        if (physicsBody != null) {
+        if (physicsBody) {
             var vel = physicsBody.body.getLinearVelocity();
-            vel.x = xSpeed;
+            vel.x = speed.x;
+            vel.y = speed.y
             physicsBody.body.setLinearVelocity(vel);
-        }
+        }        
+    }
+
+    set xSpeed(xSpeed) {
+        this.speed = this.speed.setX(xSpeed);
     }
 
     set ySpeed(ySpeed) {
-        this._ySpeed = ySpeed;
-
-        var physicsBody = this.getComponent("physicsbody");
-        if (physicsBody != null) {
-            var vel = physicsBody.body.getLinearVelocity();
-            vel.y = ySpeed;
-            physicsBody.body.setLinearVelocity(vel);
-        }
+        this.speed = this.speed.setY(ySpeed);
     }
 
-    addComponent(component) {
+    removeComponent(component) {
 
-        if (this._components[component.type] != null) {
-            console.err("Replacing existing component! " + component.type)
+        if (component instanceof Component) {
+            var index = Object.values(this._components).indexOf(component);
+            if (index != -1) {
+                this._components[Object.keys(this._components)[index]] = component;
+            }
+            return true;
         }
 
-        this._components[component.type] = component;
-        
-        if (this._game != null) {
-            component.addedToGameObject(game, this);
+        if ((typeof component) === 'string') {
+            delete this._components[component];
+            return true;
         }
 
-        return component;
+        return false;
+    }
+
+    addComponent(component, params={}) {
+
+        var comp = null
+        if (component instanceof Component) {
+            if (this._components[component.type] != null) {
+                console.err("Replacing existing component! " + component.type);
+                return;
+            }
+            
+            comp = component;
+        }
+
+        if ((typeof component) === 'string') {
+
+            comp = Component.createComponent(component, params);
+            if (!comp) {
+                console.log("error creating commponent: " + component)
+                return;
+            }
+
+        }
+
+        if (comp) {
+            this._components[comp.type] = comp;
+            if (this._game != null) {
+                comp.addedToGameObject(game, this);
+            }
+        }
+
+        return comp;  
     }
 
     getComponent(componentName) {
@@ -237,11 +235,6 @@ export class GameObject extends GameObjectContainer {
     hasComponent(componentName) {
         var comp = this._components[componentName];
         return comp !== undefined && comp !== null;
-    }
-
-    setPos(x, y) {
-        this._x = x;
-        this._y = y;
     }
 
     rotate(angleToAdd) {
@@ -347,6 +340,67 @@ export class GameObject extends GameObjectContainer {
         Object.values(this._components).forEach((component) => {
             component.postdraw(game, ctx);
         });
+    }
+
+    toJSON(smartSerialize = false, isRoot = false, variables = {}, blockWarning=false) {
+        var obj = Object.assign({}, this);
+        obj._components = {};
+        Object.keys(this._components).forEach((key) => {
+            obj._components[this._components[key].name] = this._components[key];
+        })
+        //console.log(obj);
+        return deepSerialize(obj, ["_parent", "_game", "_state"], smartSerialize, isRoot, variables, blockWarning);
+    }
+
+    static fromJSON(json) {
+        var obj = (typeof json) === 'string' ? JSON.parse(json) : json;
+
+        loadFunctions(json);
+
+        var gameObj = new GameObject();
+
+        if (obj) {
+            setProperties(gameObj, obj, ["children", "components"]);
+
+            if (obj.children) {
+                for (var i = 0; i < obj.children.length; i++) {
+                    gameObj.addGameObject(GameObject.fromJSON(obj.children[i]));
+                }
+            }
+
+            if (obj.components) {
+                var delayedComps = {
+
+                };
+                Object.keys(obj.components).forEach((key) => {
+                    var comp = obj.components[key]
+                    if (key === "physicsbody") {
+                        delayedComps['physicsbody'] = comp;
+                        return;
+                    }
+                    gameObj.addComponent(key, obj.components[key]);
+                });
+                Object.keys(delayedComps).forEach((key) => {
+                    gameObj.addComponent(key, delayedComps[key]);
+                })
+            }
+        }
+
+        return gameObj;
+    }
+
+    static create(params) {
+        return GameObject.fromJSON(params);
+    }
+
+    static initialize() {
+        GameObject.eventFuncs = [
+            'onClick', 'onMouseDown', 'onMouseUp', 'onHover',
+            'onDragStart', 'onDrag', 'onDragEnd',
+            'onPreprocess', 'onProcess', 'onPostprocess',
+            'onPredraw', 'onDraw', 'onPostdraw'
+        ]
+
     }
 
 }

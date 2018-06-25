@@ -1,26 +1,29 @@
 import { GameObjectContainer } from "./object/GameObjectContainer.js"
+import { GameObject } from "./object/GameObject.js"
+import { Point } from "./geom/Point.js"
 import planck from "planck-js"
+
+import { deepSerialize, setProperties } from "./tools/Serialize.js"
 
 export class Game extends GameObjectContainer {
 
-    constructor(canvas, width, height, pixeltoUnitRatio) {
+    constructor(canvas, screenSize, pixeltoUnitRatio) {
         super();
         this._canvas = canvas;
-        this._screenWidth = width;
-        this._screenHeight = height;
+
+        this._screenSize = new Point(screenSize.x, screenSize.y);
         this._scaleRatio = pixeltoUnitRatio;
-        this._screenSizeRatio = width / height;
+        this._screenSizeRatio = screenSize.x / screenSize.y;
 
         this._lastRender = 0;
         this._timeDelta = 0;
+        this._time =  new Date().getTime();
 
         // Game screen offset in pixels
-        this._offsetX = 0;
-        this._offsetY = 0;
+        this._screenOffset = new Point(0, 0);
 
-        // Offset in world coords
-        this._drawX = 0;
-        this._drawY = 0;
+        // Camera offset
+        this._cameraPos = new Point(0, 0);
 
         // Ratios for converting canvas pixels to screen pixels
         this._canvasWidthRatio = 0;
@@ -29,8 +32,7 @@ export class Game extends GameObjectContainer {
         this.resize();
         window.onresize = this.resize.bind(this);
 
-        this._mouseX = 0;
-        this._mouseY = 0;
+        this._mousePos = new Point(0, 0);
 
         canvas.addEventListener("mousemove", this.handleMouseMove.bind(this));
         canvas.addEventListener("mousedown", this.handleMouseDown.bind(this));
@@ -42,8 +44,17 @@ export class Game extends GameObjectContainer {
             console.log(fixture);
         });
 
+        this._state = {};
+
+        this._dragging = false;
         this._hoveredObject = null;
         this._clickedObject = null;
+
+        if (Game.classes) {
+            Object.keys(Game.classes).forEach((key) => {
+                this[key] = Game.classes[key];
+            })
+        }
 
         // Listen for all events fired
         for(var key in canvas){
@@ -56,8 +67,21 @@ export class Game extends GameObjectContainer {
         
     }
 
+    get state() {
+        return this._state;
+    }
+
+    // To behave like a GameObject, for changing GameObject parents
+    get game() {
+        return this;
+    }
+
     get world() {
         return this._world;
+    }
+
+    get time() {
+        return this._time;
     }
 
     get timeDelta() {
@@ -68,28 +92,16 @@ export class Game extends GameObjectContainer {
         return this._scaleRatio;
     }
 
-    get screenWidth() {
-        return this._screenWidth;
+    get screenSize() {
+        return this._screenSize;
     }
 
-    get screenHeight() {
-        return this._screenHeight;
+    get mousePos() {
+        return this._mousePos;
     }
 
-    get mouseX() {
-        return this._mouseX;
-    }
-
-    get mouseY() {
-        return this._mouseY;
-    }
-
-    get drawX() {
-        return this._drawX;
-    }
-
-    get drawY() {
-        return this._drawY;
+    get drawPos() {
+        return this._cameraPos;
     }
 
     set cursor(cursor) {
@@ -97,47 +109,36 @@ export class Game extends GameObjectContainer {
     }
 
     worldCoordToScreen(p) {
-        return {
-            x: p.x / this._scaleRatio,
-            y: p.y / this._scaleRatio
-        };
+        return new Point(p.x / this._scaleRatio, p.y / this._scaleRatio);
     }
 
     screenCoordToWorld(p) {
-        return {
-            x: p.x * this._scaleRatio,
-            y: p.y * this._scaleRatio
-        };
+        return new Point(p.x * this._scaleRatio, p.y * this._scaleRatio);
     }
 
     canvasToScreenPoint(p) {
-        return {
-            x: (p.x / this._canvasWidthRatio) - this._offsetX,
-            y: (p.y / this._canvasHeightRatio) - this._offsetY
-        }
+        return new Point((p.x / this._canvasWidthRatio) - this._screenOffset.x, (p.y / this._canvasHeightRatio) - this._screenOffset.y);
     }
 
 
     handleMouseMove(e) {
 
-        var p = this.canvasToScreenPoint({
-            x: e.clientX,
-            y: this._canvas.clientHeight - e.clientY
-        })
+        this._mousePos = this.canvasToScreenPoint(new Point(e.offsetX, this._canvas.clientHeight - e.offsetY));
 
-        this._mouseX = p.x;
-        this._mouseY = p.y;
+        if (this._clickedObject !== null) {
 
-        if (this._clickedObject !== null && this._clickedObject.onDrag !== undefined && this._clickedObject.onDrag !== null) {
+            if (!this._dragging) {
+                this._clickedObject.onDragStart && this._clickedObject.onDragStart(this);
+                this._dragging = true;
+                return;
+            }
 
-            this._clickedObject.onDrag(this);
+            this._clickedObject.onDrag && this._clickedObject.onDrag(this);
         }
 
     }
 
     handleMouseDown(e) {
-        console.log("mouse down")
-
         if (this._hoveredObject !== null) {
             this._clickedObject = this._hoveredObject;
 
@@ -146,9 +147,7 @@ export class Game extends GameObjectContainer {
                 physicsBody.forcePos = true;
             }
 
-            if (this._hoveredObject.onMouseDown !== undefined && this._hoveredObject.onMouseDown !== null) {
-                this._hoveredObject.onMouseDown(this);
-            }
+            this._hoveredObject.onMouseDown && this._hoveredObject.onMouseDown(this);
         }
 
     }
@@ -162,33 +161,40 @@ export class Game extends GameObjectContainer {
                 physicsBody.forcePos = false;
             }
 
-            if (this._clickedObject === this._hoveredObject && this._clickedObject.onClick !== undefined && this._clickedObject.onClick !== null) {
-                this._clickedObject.onClick(this);
+            if (this._dragging) {
+                if (this._clickedObject != null) {
+                    this._clickedObject.onDragEnd && this._clickedObject.onDragEnd(this);
+                    this._dragging = false;
+                }
+            } else if (this._clickedObject === this._hoveredObject) {
+                this._clickedObject.onClick && this._clickedObject.onClick(this);
             }
         }
 
         this._clickedObject = null;
 
-        console.log("mouseu p")
-        if (this._hoveredObject !== null && this._hoveredObject.onMouseUp !== undefined && this._hoveredObject.onMouseUp !== null) {
-            this._hoveredObject.onMouseUp(this);
+        if (this._hoveredObject !== null) {
+            this._hoveredObject.onMouseUp && this._hoveredObject.onMouseUp(this);
         }
 
     }
 
     process(timestamp) {
+
+        this._time = new Date().getTime();
         
         // Get time between frames
         this._timeDelta = timestamp - this._lastRender
 
-        if (!this._timeDelta instanceof Number) {
+        if (!this._timeDelta) {
             this._lastRender = 0;
+            this.requestFrame();
             return;
         }
 
         if (this._lastRender == 0) {
             this._lastRender = timestamp;
-            window.requestAnimationFrame(this.process.bind(this))
+            this.requestFrame();
             return;
         }
 
@@ -196,9 +202,8 @@ export class Game extends GameObjectContainer {
 
         this._hoveredObject = null;
         this._children.forEach((child) => {
-
             var collider = child.getComponent("collider");
-            var worldMouse = this.screenCoordToWorld({x: this._mouseX, y: this._mouseY});
+            var worldMouse = this.screenCoordToWorld(this.mousePos);
 
             // Mouse is inside collider
             if (collider != null && collider.shape != null && collider.shape.contains(child.x, child.y, child.rotation, worldMouse.x, worldMouse.y)) {
@@ -207,8 +212,10 @@ export class Game extends GameObjectContainer {
 
         })
 
-        // Change cursor 
-        if (this._hoveredObject !== null && this._hoveredObject.onClick !== undefined && this._hoveredObject.onClick !== null) {
+        // Change cursor
+        if (this._hoveredObject && (
+            this._hoveredObject.onClick || this._hoveredObject.onMouseDown ||
+            this._hoveredObject.onDragStart || this._hoveredObject.onDrag || this._hoveredObject.onDragEnd)) {
             this.cursor = "pointer";
         }
 
@@ -226,7 +233,7 @@ export class Game extends GameObjectContainer {
 
         // Background
         ctx.fillStyle= "black";
-        ctx.fillRect(this._offsetX, this._offsetY, this._screenWidth, this._screenHeight);
+        ctx.fillRect(this._screenOffset.x, this._screenOffset.y, this.screenSize.x, this.screenSize.y);
 
         super.preprocess(this);
 
@@ -239,9 +246,12 @@ export class Game extends GameObjectContainer {
 
         // Loop this function
         this._lastRender = timestamp
+        
+        this.requestFrame();
+    }
+
+    requestFrame() {
         window.requestAnimationFrame(this.process.bind(this))
-
-
     }
 
     draw(ctx) {
@@ -257,8 +267,8 @@ export class Game extends GameObjectContainer {
 
     resize() {
         var canvas = this._canvas;
-        var width = this._screenWidth;
-        var height = this._screenHeight;
+        var width = this._screenSize.x;
+        var height = this._screenSize.y;
 
         canvas.style.width = "100%";
         canvas.style.height = "100%";
@@ -277,16 +287,40 @@ export class Game extends GameObjectContainer {
         canvas.width = newWidth;
         canvas.height = newHeight;
 
-        this._offsetX = widthLarger ? (newWidth - width) / 2 : 0;
-        this._offsetY = !widthLarger ? (newHeight - height) / 2 : 0;
+        this._screenOffset = new Point(
+            widthLarger ? (newWidth - width) / 2 : 0,
+            !widthLarger ? (newHeight - height) / 2 : 0
+        );
 
-        var drawPos =  this.screenCoordToWorld({x: this._offsetX, y: this._offsetY});
+        this._cameraPos = this.screenCoordToWorld(this._screenOffset);
 
-        this._drawX = drawPos.x;
-        this._drawY = drawPos.y;
 
         this._canvasWidthRatio = trueWidth / newWidth;
         this._canvasHeightRatio = trueHeight / newHeight;
+    }
+
+    toJSON(smartSerialize = false, isRoot = true, variables = {}, blockWarning=false) {
+        return deepSerialize(this, [
+            "_hoveredObject", "_clickedObject", "_dragging", "_lastRender", "_timeDelta", "_time", "_mousePos", "_canvasWidthRatio", "_canvasHeightRatio", "_screenOffset", "_state"
+        ].concat(Object.keys(Game.classes)), smartSerialize, isRoot, variables, blockWarning);
+    }
+
+    static fromJSON(canvas, json) {
+        var obj = (typeof json) == 'string' ? JSON.parse(json) : json;
+
+        var game = new Game(canvas, obj.screenSize, obj.pixeltoUnitRatio);
+
+        setProperties(game, obj, ["children"]);
+
+        if (obj.children) {
+            for (var i = 0; i < obj.children.length; i++) {
+                game.addGameObject(GameObject.fromJSON(obj.children[i]));
+            }
+        }
+
+        game.resize();
+
+        return game;
     }
 
 }

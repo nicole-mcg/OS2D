@@ -6,29 +6,21 @@ import planck from "planck-js"
 export class Collider extends Component {
 
     constructor(params) {
-        super(Collider.name, "collider");
-
-        this.shape = null;
-        if (Object.keys(params).includes("shape")) {
-
-            if (!params.shape instanceof Shape) {
-                console.err("'shape' params must be a Shape object");
-            }
-
-            this.shape = params.shape;
-        }
+        super(Collider.componentName, "collider", params);
 
     }
 
-    onProcess(game) {
+    static fromJSON(json) {
+        var obj = (typeof json) == 'string' ? JSON.parse(json) : json;
 
-    }
-
-    static get name() {
-        return "collider";
+        return new Collider({shape: Shape.fromJSON(obj.shape)});
     }
 
     static initialize() {
+        Collider.componentName = "collider";
+        Collider.validParams = {
+            "shape": Shape
+        };
         Component.addComponent(Collider);
     }
 

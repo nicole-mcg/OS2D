@@ -1,6 +1,4 @@
 
-import { Game } from "../Game.js"
-
 export class GameObjectContainer {
     
     constructor() {
@@ -8,7 +6,13 @@ export class GameObjectContainer {
     }
 
     addGameObject(gameObject) {
+        if (!(gameObject instanceof GameObjectContainer.GameObject)) {
+            console.log("Tried to add a child that's not a GameObject!", gameObject);
+            return;
+        }
+        
         this._children.push(gameObject);
+
         gameObject.parent = this;
     }
 
@@ -50,6 +54,10 @@ export class GameObjectContainer {
         this._children.forEach((child) => {
             child.postdraw(game, ctx);
         })
+    }
+
+    static initialize(gameObjClass) {
+        GameObjectContainer.GameObject = gameObjClass;
     }
 
 }
