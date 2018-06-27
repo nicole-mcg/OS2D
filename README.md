@@ -11,8 +11,8 @@ A JavaScript game engine
 - GameObject
   - Holds position and rotation
   - Components
+    - Components are used to add functionality to GameObjects
     - Components have complete control over a GameObject in order to perform different functions
-    - 
 - Shapes
   - Shapes are immutable and can be reused on different components, such as ShapeRenderer and Collider
   - Currently only RegularPolygon
