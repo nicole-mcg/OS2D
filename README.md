@@ -6,7 +6,7 @@ A JavaScript game engine
   - Editable: https://codesandbox.io/s/98l3w5kkmw
 
 ## Features
-- Linked Box2D (Use GameObject.ySpeed or PhysicsBody.body.getLinearVelocity().y)
+- Linked Box2D (Use GameObject.ySpeed, GameObject.speed.y or PhysicsBody.body.getLinearVelocity().y)
 - Cross-platform
 - GameObject
   - Holds position and rotation
