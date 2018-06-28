@@ -1,14 +1,15 @@
 {
   "name": "os2d",
-  "version": "0.1.5",
+  "version": "0.2.7",
   "description": "A JavaScript 2D game engine.",
   "main": "index.js",
   "scripts": {
-    "test": "jest --bail"
+    "test": "jest --bail",
+    "webpack": "webpack --watch"
   },
   "repository": {
     "type": "git",
-    "url": "git"
+    "url": "https://github.com/c-mcg/OS2D"
   },
   "keywords": [
     "keywords"
@@ -32,10 +33,14 @@
   },
   "devDependencies": {
     "@babel/core": "^7.0.0-beta.51",
+    "babel-env": "^2.4.1",
     "babel-jest": "^23.0.1",
+    "babel-loader": "^7.1.4",
     "babel-preset-env": "^1.7.0",
     "jest": "^23.1.0",
     "jest-canvas-mock": "^1.0.3",
-    "regenerator-runtime": "^0.12.0"
+    "regenerator-runtime": "^0.12.0",
+    "webpack": "^4.12.2",
+    "webpack-cli": "^3.0.8"
   }
 }
