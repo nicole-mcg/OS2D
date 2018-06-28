@@ -1,5 +1,5 @@
-
-import { os2d } from "../index.js"
+import os2d from '../index.js'
+console.log(os2d)
 
 window.runOS2D = function() {
 
@@ -18,16 +18,16 @@ window.runOS2D = function() {
                 components: {//Specify components
 
                     'generator': {//Generator component params
-                        limit: 100,
+                        limit: 50,
                         delay: 0,
                         destroyOnComplete: true,
-                        onGenerate: function(obj, game) {
+                        onGenerate: function(obj, game, generator) {
 
-                            obj.x = 0.25 * (this.numGenerated / 2);
+                            obj.x = 0.25 * (generator.numGenerated / 2);
                             obj.y = 0.5 + Math.random() * 3;
-                            obj.rotation = Math.PI / 90 * this.numGenerated;
+                            obj.rotation = Math.PI / 90 * generator.numGenerated;
 
-                            var shape = new game.RegularPolygon(Math.round(3 + 5 * Math.random()), 0.25);
+                            var shape = new game.RegularPolygon(Math.round(3 + 5 * Math.random()), 0.5);
 
                             obj.addComponent('collider', {shape: shape});
                             obj.addComponent('shaperenderer', {
@@ -36,31 +36,12 @@ window.runOS2D = function() {
                                 outlineColor: 'white',
                                 outlineWidth: 2
                             });
-                            obj.addComponent('physicsbody');
 
                         },
                         generateParams: {
-                            onDragStart: function(game) {
-                                this.pos = game.screenCoordToWorld(game.mousePos);
-
-                                this.getComponent("renderer").color = "green";
-
-                                this.state.lastPos = this.pos;
-                            },
-                            onDrag: function(game) {
-                                this.pos = game.screenCoordToWorld(game.mousePos)
-
-                                if (this.state.lastPos) {
-                                    game.state.mouseVelocity = this.pos.subtract(this.state.lastPos).scale(game.timeDelta);
-                                }
-
-                                this.state.lastPos = this.pos;
-                            },
-                            onDragEnd: function(game) {
-                                this.speed = game.state.mouseVelocity;
-                                this.pos = game.screenCoordToWorld(game.mousePos);
-
-                                this.getComponent("renderer").color = "blue";
+                            'components': {
+                                'physicsbody': {},
+                                'draghandler': {throwable: true}
                             }
                         }
                     }
@@ -71,67 +52,33 @@ window.runOS2D = function() {
 
         );
 
-        var rect = new os2d.GameObject();
-
-        rect.x = 5
-        rect.y = 5;
-
         var shape = new os2d.RegularPolygon(4, 2);
         shape.rotation = Math.PI / 175;
 
-        var collider = rect.addComponent(os2d.createComponent("collider", {
-            shape: shape
-        }));
-
-        var shapeRenderer = rect.addComponent(os2d.createComponent("shaperenderer", {
-            shape: shape,
-            color: "red",
-            outlineColor: "white",
-            outlineWidth: 2
-        }));
-
-        rect.addComponent(os2d.createComponent("physicsbody", {
-            bodyType: "static"
-        }));
-
-        rect.onClick = function() {
-            this.getComponent("renderer").outlineColor = shapeRenderer.outlineColor != "white" ? "white" : "magenta";
-        }
-
-        rect.onDrag = function(game) {
-            this.pos = game.screenCoordToWorld(game.mousePos);
-        }
-
-        /*var rect = new os2d.GameObject();
-
-        rect.x = 5
-        rect.y = 5;
-
-        var shape = new os2d.RegularPolygon(4, 2);
-        shape.rotation = Math.PI / 175;
-
-        var collider = rect.addComponent(os2d.createComponent("collider", {
-            shape: shape
-        }));
-
-        var shapeRenderer = rect.addComponent(os2d.createComponent("shaperenderer", {
-            shape: shape,
-            color: "red",
-            outlineColor: "white",
-            outlineWidth: 2
-        }));
-
-        rect.addComponent(os2d.createComponent("physicsbody", {
-            bodyType: "static"
-        }));
-
-        rect.onClick = function() {
-            this.getComponent("renderer").outlineColor = shapeRenderer.outlineColor != "white" ? "white" : "magenta";
-        }
-
-        rect.onDrag = function(game) {
-            this.pos = game.screenCoordToWorld(game.mousePos);
-        }*/
+        var rect = os2d.GameObject.create({
+            pos: {
+                x: 5,
+                y: 5
+            },
+            components: {
+                collider: {
+                    shape: shape
+                },
+                shaperenderer: {
+                    shape: shape,
+                    color: 'red',
+                    outlineColor: 'white',
+                    outlineWidth: 2
+                },
+                physicsbody: {
+                    bodyType: 'static'
+                },
+                draghandler: {throwable: true}
+            },
+            onClick: function(obj, game) {
+                obj.getComponent("renderer").outlineColor = shapeRenderer.outlineColor != "white" ? "white" : "magenta";
+            }
+        });
 
         game.addGameObject(rect);
 
@@ -158,26 +105,24 @@ window.runOS2D = function() {
                 rot: Math.PI / 2
             }
         ]
+
+        var shape = new os2d.RegularPolygon(4, 18);
+        var shapeRendererParams = {
+          shape: shape,
+          color: "red"
+        };
         for (var i = 0; i < 4; i++) {
-            var ground = new os2d.GameObject();
-            ground.x = groundPos[i].x;
-            ground.y = groundPos[i].y;
-            ground.rotation = groundPos[i].rot + Math.PI/4;
-
-            var groundShape = new os2d.RegularPolygon(4, 18);
-            ground.addComponent(os2d.createComponent("shaperenderer", {
-                shape: groundShape,
-                color: "red"
-            }));
-            ground.addComponent(os2d.createComponent("collider", {
-                shape: groundShape
-            }))
-            ground.addComponent(os2d.createComponent("physicsbody", {
-                bodyType: "static"
-            }))
-
-            game.addGameObject(ground)
-
+            game.addGameObject(
+                os2d.GameObject.create({
+                    pos: os2d.Point.from(groundPos[i]),
+                    rotation: groundPos[i].rot + Math.PI / 4,
+                    components: {
+                        shapeRenderer: shapeRendererParams,
+                        collider: { shape: shape },
+                        physicsbody: { bodyType: "static" }
+                    }
+                })
+            );
         }
 
         var printSmart = function() {
@@ -191,7 +136,7 @@ window.runOS2D = function() {
             console.log(json);
         }
         
-        printSmart();
+        //printSmart();
 
         return game;
     }
@@ -222,8 +167,20 @@ window.runOS2D = function() {
         //return loadDumb();
     }
 
-    //var game = recreateGame();
-    var game = loadFromJSON();
+    var loader = new os2d.Loader('smart.json', 'img/square_pig.jpg', 'dumb.json', 'build.js', 'img/big.jpg', 'test_files.zip');
+
+    loader.onProgress = function(percent, loaded, total) {
+        console.log(percent, loaded, total);
+    }
+
+    loader.onComplete = function(files) {
+        console.log('complete!')
+    }
+
+    loader.start();
+
+    var game = recreateGame();
+    //var game = loadFromJSON();
     game.process(0);
 }
 
