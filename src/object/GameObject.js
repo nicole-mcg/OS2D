@@ -1,11 +1,11 @@
-import { GameObjectContainer } from "./GameObjectContainer.js"
-import { Component } from "../component/Component.js"
+import GameObjectContainer from "./GameObjectContainer.js"
+import Component from "../component/Component.js"
 
-import { Point } from "../geom/Point.js"
+import Point from "../geom/Point.js"
 
 import { deepSerialize, setProperties, loadFunctions } from "../tools/Serialize.js"
 
-export class GameObject extends GameObjectContainer {
+export default class GameObject extends GameObjectContainer {
 
     constructor(params) {
         super();
@@ -26,6 +26,8 @@ export class GameObject extends GameObjectContainer {
         this._components = {};
 
         this._state = {};
+
+        this._fixedPosition = false;
 
         // public variables
         if (params) {
@@ -63,13 +65,25 @@ export class GameObject extends GameObjectContainer {
             return new Point(0, 0);
         }
 
-        var pos = this.pos.setY(this.game.screenCoordToWorld(this.game.screenSize).y - this.y);
+        if (fixedPosition) {
+            var pos = this.pos;
+            if (this.parent && this.parent.fixedPosition) {
+                pos = pos.add(this.parent.drawPos);
+            }
+            return pos;
+        }
 
-        if(this.parent != null) {
+        var pos = this.pos.setY(this.game.screenCoordToWorld(this.game.screenSize).y - this.y);//Invert Y
+
+        if(this.parent) {
             return pos.add(this.parent.drawPos);
         }
 
         return pos;
+    }
+
+    get fixedPosition() {
+
     }
 
     get rotation() {
@@ -120,11 +134,15 @@ export class GameObject extends GameObjectContainer {
         
     }
 
+    set fixedPosition(fixedPosition) {
+        this._fixedPosition = fixedPosition;
+    }
+
     set pos(p) {
         this._pos = p;
 
         var physicsBody = this.getComponent("physicsbody");
-        if (physicsBody) {
+        if (physicsBody && physicsBody.body) {
             var pos = physicsBody.body.getPosition();
             pos.x = p.x;
             pos.y = p.y;
@@ -152,7 +170,7 @@ export class GameObject extends GameObjectContainer {
         this._rotation = rotation;
 
         var physicsBody = this.getComponent("physicsbody");
-        if (physicsBody) {
+        if (physicsBody && physicsBody.body) {
             physicsBody.body.setAngle(rotation);
         }
     }
@@ -161,7 +179,7 @@ export class GameObject extends GameObjectContainer {
         this._speed = speed;
 
         var physicsBody = this.getComponent("physicsbody");
-        if (physicsBody) {
+        if (physicsBody && physicsBody.body) {
             var vel = physicsBody.body.getLinearVelocity();
             vel.x = speed.x;
             vel.y = speed.y
@@ -245,7 +263,7 @@ export class GameObject extends GameObjectContainer {
 
         // Preprocess
         if (this.onPreprocess !== undefined && this.onPreprocess != null) {
-            this.onPreprocess(game);
+            this.onPreprocess(this, game);
         }
 
         // Children preprocess
@@ -253,7 +271,7 @@ export class GameObject extends GameObjectContainer {
 
         // Components preprocess
         Object.values(this._components).forEach((component) => {
-            component.preprocess(game);
+            component.preprocess(this, game);
         });
 
     }
@@ -263,18 +281,20 @@ export class GameObject extends GameObjectContainer {
         var timeDelta = game.timeDelta;
 
         if (this.onProcess !== undefined && this.onProcess != null) {
-            this.onProcess(game);
+            this.onProcess(this, game);
         }
 
-        //this._x += this.xSpeed * timeDelta;
-        //this._y += this.ySpeed * timeDelta;
+        if (!this.getComponent('physicsbody')) {
+            this._x += this.xSpeed * timeDelta;
+            this._y += this.ySpeed * timeDelta;
+        }
 
         // Process children
         super.process(game);
 
         // Components preprocess
         Object.values(this._components).forEach((component) => {
-            component.process(game);
+            component.process(this, game);
         });
 
     }
@@ -283,7 +303,7 @@ export class GameObject extends GameObjectContainer {
 
         // Postprocess
         if (this.onPostprocess !== undefined && this.onPostprocess != null) {
-            this.onPostprocess(game);
+            this.onPostprocess(this, game);
         }
 
         // Children postprocess
@@ -299,7 +319,7 @@ export class GameObject extends GameObjectContainer {
     predraw(game, ctx) {
 
         if (this.onPredraw !== undefined && this.onPredraw != null) {
-            this.onPredraw.bind(this)(game, ctx);
+            this.onPredraw(this, game, ctx);
         }
 
         // Children predraw
@@ -315,7 +335,7 @@ export class GameObject extends GameObjectContainer {
     draw(game, ctx) {
 
         if (this.onDraw !== undefined && this.onDraw != null) {
-            this.onDraw.bind(this)(game, ctx);
+            this.onDraw(this, game, ctx);
         }
 
         // Draw children
@@ -330,7 +350,7 @@ export class GameObject extends GameObjectContainer {
 
     postdraw(game, ctx) {
         if (this.onPostdraw !== undefined && this.onPostdraw != null) {
-            this.onPostdraw.bind(this)(game, ctx);
+            this.onPostdraw(this, game, ctx);
         }
 
         // Children postdraw
@@ -369,20 +389,10 @@ export class GameObject extends GameObjectContainer {
             }
 
             if (obj.components) {
-                var delayedComps = {
-
-                };
                 Object.keys(obj.components).forEach((key) => {
                     var comp = obj.components[key]
-                    if (key === "physicsbody") {
-                        delayedComps['physicsbody'] = comp;
-                        return;
-                    }
                     gameObj.addComponent(key, obj.components[key]);
                 });
-                Object.keys(delayedComps).forEach((key) => {
-                    gameObj.addComponent(key, delayedComps[key]);
-                })
             }
         }
 

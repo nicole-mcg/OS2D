@@ -1,6 +1,6 @@
 import  {Map} from "extendable-immutable"
 
-export class Point extends Map {
+export default class Point extends Map {
 
     constructor(x, y) {
         super({x: x, y: y});

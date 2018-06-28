@@ -1,13 +1,21 @@
 
-import { Component } from "./Component.js"
-import { Shape } from "../geom/shape/Shape.js"
+import Component from "./Component.js"
+import Shape from "../geom/shape/Shape.js"
 import planck from "planck-js"
 
-export class Collider extends Component {
+export default class Collider extends Component {
 
     constructor(params) {
         super(Collider.componentName, "collider", params);
 
+    }
+
+    onAdd(game, gameObject) {
+        var physicsBody = gameObject.getComponent("physicsbody");
+
+        if (physicsBody && !physicsBody.collider) {
+            physicsBody.onAdd(game, gameObject);
+        }
     }
 
     static fromJSON(json) {

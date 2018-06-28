@@ -1,12 +1,12 @@
 
-import { Component } from "./Component.js"
+import Component from "./Component.js"
 import planck from "planck-js"
 
-import { Point } from "../geom/Point.js"
+import Point from "../geom/Point.js"
 
 import { deepSerialize } from "../tools/Serialize.js"
 
-export class PhysicsBody extends Component {
+export default class PhysicsBody extends Component {
 
     constructor(params) {
         super(PhysicsBody.componentName, "physicsbody", params);
@@ -54,19 +54,19 @@ export class PhysicsBody extends Component {
         }
     }
 
-    onProcess(game) {
+    onProcess(obj, game) {
         if (!this.collider) {
-            if (gameObject.getComponent("collider")) {
-                onAdd(game, this.gameObject);
+            if (obj.getComponent("collider")) {
+                onAdd(game, obj);
                 onProcess(game);
             }
             throw "error: GameObject must have a collider for physics processing";
         }
         if (!this.forcePos) {
             var pos = this.body.getPosition();
-            this.gameObject.pos = Point.from(pos);
-            this.gameObject.rotation = this.body.getAngle();
-            this.gameObject.speed = Point.from(this.body.getLinearVelocity());
+            obj.pos = Point.from(pos);
+            obj.rotation = this.body.getAngle();
+            obj.speed = Point.from(this.body.getLinearVelocity());
         } else {
             this.body.setLinearVelocity(planck.Vec2(0, 0));
             this.body.setAngularVelocity(0);

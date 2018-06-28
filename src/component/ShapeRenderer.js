@@ -1,8 +1,8 @@
 
-import { Component } from "./Component.js"
-import { Shape } from "../geom/shape/Shape.js"
+import Component from "./Component.js"
+import Shape from "../geom/shape/Shape.js"
 
-export class ShapeRenderer extends Component {
+export default class ShapeRenderer extends Component {
 
     constructor(params) {
         super(ShapeRenderer.componentName, "renderer", params);

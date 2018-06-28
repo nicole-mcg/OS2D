@@ -1,16 +1,15 @@
 import  {Map, List} from "extendable-immutable"
 
-import { Point } from "../Point.js"
+import Point from "../Point.js"
 
-import { deepSerialize } from "../../tools/Serialize.js"
+import { deepSerialize, setProperties } from "../../tools/Serialize.js"
 
-export class Shape extends Map {
+export default class Shape extends Map {
 
-    constructor(type, vertices) {
-        super({
-            type: type,
-            vertices: new List(vertices)
-        });
+    constructor(type, params) {
+        super(setProperties({
+            type: type
+        }, params));
         //console.log(this.vertices)
 
         super.toJSON = this._toJSON;
@@ -37,12 +36,7 @@ export class Shape extends Map {
     }
 
     // Abstract
-    contains(x, y, rot, px, py) {
-        return false;
-    }
-
-    // Abstract
-    collides(x, y, rot, other, otherX, otherY, otherRot) {
+    contains(pos, rot, otherPos) {
         return false;
     }
 

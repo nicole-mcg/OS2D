@@ -1,37 +1,39 @@
 
-import { Shape } from "./Shape.js"
-import { Point } from "../Point.js"
+import Shape from "./Shape.js"
+import Point from "../Point.js"
 
 import { deepSerialize } from "../../tools/Serialize.js" 
 
-export class RegularPolygon extends Shape {
+export default class RegularPolygon extends Shape {
 
     constructor(numSides, size, vertices=null) {
-        super("regularpolygon", vertices != null ? vertices : function() {
-            var vertices = [];
+        super("regularpolygon", {
+            numSides: numSides,
+            size: size,
+            vertices: vertices != null ? vertices : function() {
+                var vertices = [];
 
-            var x = 0;
-            var y = 0;
+                var x = 0;
+                var y = 0;
 
-            var sliceAngle = Math.PI*2 / numSides;
-            var internalAngle = (numSides - 2) * Math.PI / (numSides * 2);
+                var sliceAngle = Math.PI*2 / numSides;
+                var internalAngle = (numSides - 2) * Math.PI / (numSides * 2);
 
-            var distance = size / 2;
-            var currAngle = Math.PI/2;
+                var distance = size / 2;
+                var currAngle = Math.PI/2;
 
-            for (var i = 0; i < numSides; i++) {
-                x = distance * Math.cos(-currAngle);
-                y = -distance * Math.sin(-currAngle);
+                for (var i = 0; i < numSides; i++) {
+                    x = distance * Math.cos(-currAngle);
+                    y = -distance * Math.sin(-currAngle);
 
-                vertices.push(new Point(x, y));
+                    vertices.push(new Point(x, y));
 
-                currAngle += sliceAngle;
+                    currAngle += sliceAngle;
+                }
+
+                return vertices;
             }
-
-            return vertices;
         }());
-        this.numSides = numSides;
-        this.size = size;
 
         if (this.numSides === undefined || this.numSides === null || 
             this.size === undefined || this.size === null ||
@@ -43,8 +45,16 @@ export class RegularPolygon extends Shape {
         this.toJSON = this._toJSON;
     }
 
-    contains(x, y, rotation, px, py) {
-        var p = new Point(px - x, py - y);
+    get numSides() {
+        return this.get("numSides");
+    }
+
+    get size() {
+        return this.get("size");
+    }
+
+    contains(pos, rotation, otherPos) {
+        var p = new Point(otherPos.x - pos.x, otherPos.y - pos.y);
         var vertices = this.vertices;
 
         var p0 = new Point(0, 0);

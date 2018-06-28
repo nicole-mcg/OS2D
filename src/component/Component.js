@@ -1,6 +1,6 @@
 import { deepSerialize, setProperties, loadFunctions } from "../tools/Serialize.js"
 
-export class Component {
+export default class Component {
 
     constructor(name="", type="", params) {
         this._name = name.toLowerCase();
@@ -55,50 +55,50 @@ export class Component {
         this._game = game;
         this._gameObject = gameObject;
         if (this.onAdd !== undefined && this.onAdd !== null) {
-            this.onAdd.bind(this)(game, gameObject);
+            this.onAdd(game, gameObject);
         }
         //console.log(this.toJSON());
     }
 
     removedFromGameObject() {
         if (this.onRemove !== undefined && this.onRemove !== null) {
-            this.onRemove.bind(this)();
+            this.onRemove();
         }
     }
 
-    preprocess(game) {
+    preprocess(obj, game) {
         if (this._enabled && this.onPreprocess !== undefined && this.onPreprocess !== null) {
-            this.onPreprocess.bind(this)(game);
+            this.onPreprocess(obj, game);
         }
     }
 
-    process(game) {
+    process(obj, game) {
         if (this._enabled && this.onProcess !== undefined && this.onProcess !== null) {
-            this.onProcess.bind(this)(game);
+            this.onProcess(obj, game);
         }
     }
 
-    postprocess(game) {
+    postprocess(obj, game) {
         if (this._enabled && this.onPostprocess !== undefined && this.onPostprocess !== null) {
-            this.onPostprocess.bind(this)(game);
+            this.onPostprocess(obj, game);
         }
     }
 
-    predraw(game, ctx) {
+    predraw(obj, game, ctx) {
         if (this._enabled && this.onPredraw !== undefined && this.onPredraw !== null) {
-            this.onPredraw.bind(this)(game, ctx);
+            this.onPredraw(obj, game, ctx);
         }
     }
 
-    draw(game, ctx) {
+    draw(obj, game, ctx) {
         if (this._enabled && this.onDraw !== undefined && this.onDraw !== null) {
-            this.onDraw.bind(this)(game, ctx);
+            this.onDraw(obj, game, ctx);
         }
     }
 
-    postdraw(game, ctx) {
+    postdraw(obj, game, ctx) {
         if (this._enabled && this.onPostdraw !== undefined && this.onPostdraw !== null) {
-            this.onPostdraw.bind(this)(game, ctx);
+            this.onPostdraw(obj, game, ctx);
         }
     }
 
@@ -180,65 +180,69 @@ export class Component {
 
         var componentClass = Component.components[componentName];
 
-        if (componentClass) {
-            var validParams = componentClass.validParams;
-            //console.log(componentName, validParams, params);
+        if (!componentClass) {
+            console.log("Could not find component: " + componentName)
+            return;
+        }
 
-            Object.keys(Component.eventFuncs).forEach((key) => {
-                validParams[Component.eventFuncs[key]] = Function;
-            })
+        var validParams = componentClass.validParams;
+        //console.log(componentName, validParams, params);
 
-            var validParamKeys = Object.keys(validParams);
-            var paramKeys = Object.keys(params);
+        Object.keys(Component.eventFuncs).forEach((key) => {
+            validParams[Component.eventFuncs[key]] = Function;
+        })
 
-            var acceptedParams = {};
-            for (var i = 0; i < paramKeys.length; i++) {
-                var key = paramKeys[i];
-                var value = params[key];
+        var validParamKeys = Object.keys(validParams);
+        var paramKeys = Object.keys(params);
 
-                if (key === 'name' || key === 'type'){
+        var acceptedParams = {};
+        for (var i = 0; i < paramKeys.length; i++) {
+            var key = paramKeys[i];
+            var value = params[key];
+
+            if (key === 'name' || key === 'type'){
+                continue;
+            }
+
+            if (key !== 'enabled') {
+                if (!Component.validateParam(key, params, validParams)) {
+                    throw "Error: invalid param (incorrect name or type): name=" + key + " type=" + (typeof value) + (validParams[key] ? " should be type: " + validParams[key] : "");
+                    continue;
+                }
+            }
+
+            
+
+            acceptedParams[key] = params[key];
+        }
+
+        //Fill any unfilled values with default values
+        var defaultParams = componentClass.defaultParams;
+        if (defaultParams) {
+            var defaultParamKeys = Object.keys(defaultParams);
+            for (var i = 0; i < defaultParamKeys.length; i++) {
+                var paramName = defaultParamKeys[i];
+
+
+                if (acceptedParams[paramName] !== undefined) {
                     continue;
                 }
 
-                if (key !== 'enabled') {
-                    if (!Component.validateParam(key, params, validParams)) {
-                        throw "Error: invalid param (incorrect name or type): name=" + key + " type=" + (typeof value) + (validParams[key] ? " should be type: " + validParams[key] : "");
-                        continue;
-                    }
+                if (!Component.validateParam(paramName, defaultParams, validParams)) {
+                    throw "Error: invalid default param (incorrect name or type): name=" + paramName + " type=" + (typeof defaultParams[paramName]) + (validParams[paramName] ? " should be type: " + validParams[paramName] : "");
+                    continue;
                 }
 
-                
 
-                acceptedParams[key] = params[key];
+                acceptedParams[paramName] = defaultParams[paramName];
+
             }
-
-            //Fill any unfilled values with default values
-            var defaultParams = componentClass.defaultParams;
-            if (defaultParams) {
-                var defaultParamKeys = Object.keys(defaultParams);
-                for (var i = 0; i < defaultParamKeys.length; i++) {
-                    var paramName = defaultParamKeys[i];
-
-
-                    if (acceptedParams[paramName] !== undefined) {
-                        continue;
-                    }
-
-                    if (!Component.validateParam(paramName, defaultParams, validParams)) {
-                        throw "Error: invalid default param (incorrect name or type): name=" + paramName + " type=" + (typeof defaultParams[paramName]) + (validParams[paramName] ? " should be type: " + validParams[paramName] : "");
-                        continue;
-                    }
-
-
-                    acceptedParams[paramName] = defaultParams[paramName];
-
-                }
-            }
-
-            return new componentClass(acceptedParams);
         }
 
-        console.log("Could not find component: " + componentName)
+        return new componentClass(acceptedParams);
+    
+
+        
     }
 
 }

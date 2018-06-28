@@ -1,21 +1,23 @@
 
 
-import { Game } from "./src/Game.js"
+import Game from "./src/Game.js"
 
-import { GameObject } from "./src/object/GameObject.js"
-import { GameObjectContainer } from "./src/object/GameObjectContainer.js"
+import GameObject from "./src/object/GameObject.js"
+import GameObjectContainer from "./src/object/GameObjectContainer.js"
 
-import { Point } from "./src/geom/Point.js"
-import { Shape } from "./src/geom/shape/Shape.js"
-import { RegularPolygon } from "./src/geom/shape/RegularPolygon.js"
+import Point from "./src/geom/Point.js"
+import Shape from "./src/geom/shape/Shape.js"
+import RegularPolygon from "./src/geom/shape/RegularPolygon.js"
 
-import { Component } from "./src/component/Component.js"
-import { Collider } from "./src/component/Collider.js"
-import { PhysicsBody } from "./src/component/PhysicsBody.js"
-import { ShapeRenderer } from "./src/component/ShapeRenderer.js"
-import { StateController, State } from "./src/component/StateController.js"
-import { Generator } from "./src/component/Generator.js"
+import Component from "./src/component/Component.js"
+import Collider from "./src/component/Collider.js"
+import PhysicsBody from "./src/component/PhysicsBody.js"
+import ShapeRenderer from "./src/component/ShapeRenderer.js"
+import StateController, State from "./src/component/StateController.js"
+import Generator from "./src/component/Generator.js"
+import DragHandler from "./src/component/DragHandler.js"
 
+import Loader from "./src/tools/Loader.js"
 import { 
     deepSerialize,
     deserializeVariables,
@@ -38,6 +40,7 @@ PhysicsBody.initialize();
 ShapeRenderer.initialize();
 StateController.initialize();
 Generator.initialize();
+DragHandler.initialize();
 
 var os2d = {};
 
@@ -58,7 +61,10 @@ os2d["ShapeRenderer"] = ShapeRenderer;
 os2d["StateController"] = StateController;
 os2d["State"] = State;
 os2d["Generator"] = Generator;
+os2d["DragHandler"] = DragHandler;
 
+
+os2d["Loader"] = Loader;
 os2d["deepSerialize"] = deepSerialize;
 os2d["deserializeVariables"] = deserializeVariables;
 os2d["replaceVariables"] = replaceVariables;
@@ -71,4 +77,6 @@ Object.keys(os2d).forEach(function(key) {
     Game.classes[key] = os2d[key];
 });
 
-export { os2d };
+export default os2d;
+
+console.log("worked");

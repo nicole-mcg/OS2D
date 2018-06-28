@@ -1,11 +1,11 @@
-import { GameObjectContainer } from "./object/GameObjectContainer.js"
-import { GameObject } from "./object/GameObject.js"
-import { Point } from "./geom/Point.js"
+import GameObjectContainer from "./object/GameObjectContainer.js"
+import GameObject from "./object/GameObject.js"
+import Point from "./geom/Point.js"
 import planck from "planck-js"
 
 import { deepSerialize, setProperties } from "./tools/Serialize.js"
 
-export class Game extends GameObjectContainer {
+export default class Game extends GameObjectContainer {
 
     constructor(canvas, screenSize, pixeltoUnitRatio) {
         super();
@@ -128,12 +128,12 @@ export class Game extends GameObjectContainer {
         if (this._clickedObject !== null) {
 
             if (!this._dragging) {
-                this._clickedObject.onDragStart && this._clickedObject.onDragStart(this);
+                this._clickedObject.onDragStart && this._clickedObject.onDragStart(this._clickedObject, this);
                 this._dragging = true;
                 return;
             }
 
-            this._clickedObject.onDrag && this._clickedObject.onDrag(this);
+            this._clickedObject.onDrag && this._clickedObject.onDrag(this._clickedObject, this);
         }
 
     }
@@ -147,7 +147,7 @@ export class Game extends GameObjectContainer {
                 physicsBody.forcePos = true;
             }
 
-            this._hoveredObject.onMouseDown && this._hoveredObject.onMouseDown(this);
+            this._hoveredObject.onMouseDown && this._hoveredObject.onMouseDown(this._hoveredObject, this);
         }
 
     }
@@ -163,18 +163,18 @@ export class Game extends GameObjectContainer {
 
             if (this._dragging) {
                 if (this._clickedObject != null) {
-                    this._clickedObject.onDragEnd && this._clickedObject.onDragEnd(this);
+                    this._clickedObject.onDragEnd && this._clickedObject.onDragEnd(this._clickedObject, this);
                     this._dragging = false;
                 }
             } else if (this._clickedObject === this._hoveredObject) {
-                this._clickedObject.onClick && this._clickedObject.onClick(this);
+                this._clickedObject.onClick && this._clickedObject.onClick(this._clickedObject, this);
             }
         }
 
         this._clickedObject = null;
 
         if (this._hoveredObject !== null) {
-            this._hoveredObject.onMouseUp && this._hoveredObject.onMouseUp(this);
+            this._hoveredObject.onMouseUp && this._hoveredObject.onMouseUp(this._hoveredObject, this);
         }
 
     }
@@ -206,7 +206,7 @@ export class Game extends GameObjectContainer {
             var worldMouse = this.screenCoordToWorld(this.mousePos);
 
             // Mouse is inside collider
-            if (collider != null && collider.shape != null && collider.shape.contains(child.x, child.y, child.rotation, worldMouse.x, worldMouse.y)) {
+            if (collider != null && collider.shape != null && collider.shape.contains(child.pos, child.rotation, worldMouse)) {
                 this._hoveredObject = child;
             }
 

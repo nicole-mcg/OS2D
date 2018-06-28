@@ -1,5 +1,5 @@
 
-export class GameObjectContainer {
+export default class GameObjectContainer {
     
     constructor() {
         this._children = [];
