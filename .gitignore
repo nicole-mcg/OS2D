@@ -9,3 +9,5 @@ test/smart.json
 test/dumb.json
 
 test/test_files.zip
+
+test/img/**
