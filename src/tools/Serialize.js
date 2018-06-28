@@ -1,10 +1,15 @@
-import { Shape } from "../geom/shape/Shape.js"
-import { Point } from "../geom/Point.js"
+import Shape from "../geom/shape/Shape.js"
+import Point from "../geom/Point.js"
+import Component from "../component/Component.js"
+import GameObject from "../object/GameObject.js"
 
 const IMMUTABLE_TYPES = [
     [Shape, [{type: "regularpolygon"}, 'numSides', 'size'], ["type", "vertices"]],
     [Point, ["x", "y"]]
 ];
+const SERIALIZABLE_TYPES = [
+    [Component, ["name", "type", "enabled"]],
+]
 export function deepSerialize(obj, keysToIgnore=[], smartSerialize=false, isRoot=true, variables={}, blockWarning=false) {
     var string = "";
 
@@ -33,6 +38,7 @@ export function deepSerialize(obj, keysToIgnore=[], smartSerialize=false, isRoot
         }
 
         var valString = "";
+        var isString = false;
         if (value instanceof Function) {
             var funcString = value.toString();
             var valLines = funcString.split('\n')
@@ -50,18 +56,20 @@ export function deepSerialize(obj, keysToIgnore=[], smartSerialize=false, isRoot
                 var index = Object.values(variables.functions).indexOf(funcString);
                 if (index != -1) {
                     index = Object.keys(variables.functions)[index];
-                    valString = '"' + index + '"';
+                    valString = index;
                 } else {
                     index = getNextIndex(variables);
                     variables.functions['$' + index] = funcString;
-                    valString = '"$' + index + '"';
+                    valString = '$' + index;
                 }
             } else {
-                valString = '"' + funcString.split('"').join('\\"') + '"';
+                valString = funcString.split('"').join('\\"');
             }
+            isString = true;
 
         } else if (typeof value === 'string') {
-            valString = "\"" + value + "\"";
+            valString = value;
+            isString = true;
         } else if (value instanceof Array) {
 
             valString = deepSerialize(value, [], smartSerialize, false, variables, true);
@@ -74,17 +82,19 @@ export function deepSerialize(obj, keysToIgnore=[], smartSerialize=false, isRoot
                     if (value instanceof type) {
 
                         var  match = Object.values(variables).find((variable) => {
-                            return variable.equals && variable.equals(value);
+                            return variable instanceof Object && variable.equals && variable.equals(value);
                         })
 
                         if (match) {
                             var index =  Object.keys(variables)[Object.values(variables).indexOf(match)].replace("$", "&");
-                            valString = "\"" + index + "\"";
+                            valString = index;
                         } else {
                             var index = getNextIndex(variables);
                             variables["$" + index] = value;
-                            valString = "\"&" + index + "\"";
+                            valString = "&" + index;
+                            isString = true;
                         }
+                        isString = true;
 
                     }
                 }
@@ -102,14 +112,33 @@ export function deepSerialize(obj, keysToIgnore=[], smartSerialize=false, isRoot
                     valString = value.toJSON(smartSerialize, false, variables, true);
                 }
             }
+
+            
         } else if (typeof value == 'number' || typeof value === 'boolean') {
             valString = value.toString();
         } else  {
             valString = value.toString();
 
             if (!valString.startsWith("[") && !valString.startsWith("{")) {
-                valString = "\"" + valString + "\"";
+                isString = true;
             }
+
+        }
+
+        if (smartSerialize && !keys[i].includes("$") && !keys[i].includes("&")) {
+
+            //This is the code to make all variables serialize into each other
+            /*var tmp = valString.split('"').join('\\"');
+            var index = Object.values(variables).indexOf(tmp);
+            if (index != -1) {
+                index = Object.keys(variables)[index];
+                valString = index;
+            } else {
+                index = getNextIndex(variables);
+                variables['$' + index] = tmp;
+                valString = '$' + index + '';
+            }
+            isString = true; */
 
         }
 
@@ -117,37 +146,48 @@ export function deepSerialize(obj, keysToIgnore=[], smartSerialize=false, isRoot
             string += ",";
         }
 
+        if (isString) {
+            valString = '"' + valString + '"';
+        }
+
         if (obj instanceof Array) {
             string += valString;
         } else if (obj instanceof Object) {
             var jsonKey = keys[i].startsWith("_") ? keys[i].slice(1) : keys[i];
             string += "\"" + jsonKey + "\":" + valString;
-        } 
+        }
+
+
 
         passedFirst = true;
     }
 
     var functions = "";
-    if (smartSerialize && isRoot) {
 
-        if(Object.keys(variables.functions).length > 0) {
-            functions = 'var functions = {'
-            var first = true;
-            Object.keys(variables.functions).forEach((key) => {
-                if (!first) {
-                    functions += ","
-                }
+    if (smartSerialize) {
+        
 
-                functions += key + ": " + variables.functions[key];
+        if (isRoot) {
+            if(Object.keys(variables.functions).length > 0) {
+                functions = 'var functions = {'
+                var first = true;
+                Object.keys(variables.functions).forEach((key) => {
+                    if (!first) {
+                        functions += ","
+                    }
 
-                first = false;
-            })
-            functions += '};';
+                    functions += key + ": " + variables.functions[key];
+
+                    first = false;
+                })
+                functions += '};';
+            }
+
+            console.log(variables)
+            deepSerialize(variables, [], true, false, variables, true); //Run this once before to recursively compress variables before serialization
+            delete variables.functions;
+            string += ",\"variables\": " + deepSerialize(variables, [], true, false, variables, true);
         }
-
-        deepSerialize(variables, [], true, false, variables, true); //Run this once before to recursively compress variables before serialization
-        delete variables.functions;
-        string += ",\"variables\": " + deepSerialize(variables, [], true, false, variables, true);
     }
 
     if (obj instanceof Array) {
@@ -234,6 +274,7 @@ export function deserializeVariables(obj, functions={}) {
                     type: Function,
                     value: func
                 }
+                return;
             }
 
             if (obj.variables[variableName] instanceof Function) {
@@ -247,9 +288,15 @@ export function deserializeVariables(obj, functions={}) {
                     type: Function,
                     value: func
                 }
+                return;
             }
 
+            var foundImmutable = false;
             IMMUTABLE_TYPES.forEach((typeData) => {
+
+                if (foundImmutable) {
+                    return;
+                }
 
                 var typeStructures = typeData.slice(1);
 
@@ -288,11 +335,20 @@ export function deserializeVariables(obj, functions={}) {
                         type: typeData[0],
                         value: obj.variables[variableName]
                     }
+                    foundImmutable = true;
                     return;
                 } 
 
-                
+                /*
+                variableTypes[variableName] = {
+                    type: "JSON",
+                    value: obj.variables[variableName]
+                }*/
             })
+
+            //if (!foundImmutable) {
+
+            //}
 
 
             
