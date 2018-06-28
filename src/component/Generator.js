@@ -1,8 +1,8 @@
 
-import { Component } from "./Component.js"
-import { GameObject } from '../object/GameObject.js'
+import Component from "./Component.js"
+import GameObject from '../object/GameObject.js'
 
-export class Generator extends Component {
+export default class Generator extends Component {
 
     constructor(params) {
         super(Generator.componentName, "generator", params);
@@ -11,7 +11,7 @@ export class Generator extends Component {
         this.timeSaved = 0;
     }
 
-    onProcess(game) {
+    onProcess(obj, game) {
         if (!this.lastGenerate) {
             this.lastGenerate = game.time;
             return;
@@ -20,12 +20,12 @@ export class Generator extends Component {
         var timePassed = game.time - this.lastGenerate + this.timeSaved;
 
         while (timePassed > this.delay && (this.limit === 0 || this.numGenerated < this.limit)) {
-            var obj = new GameObject(this.generateParams);
+            var obj = GameObject.create(this.generateParams);
 
             obj.pos = this._gameObject.pos;
 
             if (this.onGenerate) {
-                this.onGenerate(obj, game);
+                this.onGenerate(obj, game, this);
             }
 
             if (this.addToGame) {

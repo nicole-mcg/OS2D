@@ -1,7 +1,7 @@
 
-import { Component } from "./Component.js"
+import Component from "./Component.js"
 
-export class StateController extends Component {
+export default class StateController extends Component {
 
     constructor(params) {
         super(StateController.componentName, "controller", params);
@@ -35,7 +35,7 @@ export class StateController extends Component {
         }
     }
 
-    onProcess(game) {
+    onProcess(obj, game) {
         if (this.currentState.onProcess !== undefined && this.currentState.onProcess !== null) {
             this.currentState.onProcess(game);
         }
