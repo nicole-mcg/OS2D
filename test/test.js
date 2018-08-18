@@ -86,27 +86,27 @@ window.runOS2D = function() {
         var groundPos = [
             {
                 x: 15.36/2,
-                y: 14.8,
+                y: 16.8,
                 rot: 0
             },
             {
                 x: 15.36/2,
-                y: -6.25,
+                y: -8.25,
                 rot: Math.PI
             },
             {
-                x: -5,
+                x: -7,
                 y: 3,
                 rot: -Math.PI / 2
             },
             {
-                x: 20.25,
+                x: 22.25,
                 y: 3,
                 rot: Math.PI / 2
             }
         ]
 
-        var shape = new os2d.RegularPolygon(4, 18);
+        var shape = new os2d.RegularPolygon(4, 25);
         var shapeRendererParams = {
           shape: shape,
           color: "red"
@@ -167,7 +167,7 @@ window.runOS2D = function() {
         //return loadDumb();
     }
 
-    var loader = new os2d.Loader('smart.json', 'img/square_pig.jpg', 'dumb.json', 'build.js', 'img/big.jpg', 'test_files.zip');
+    /*var loader = new os2d.Loader('smart.json', 'img/square_pig.jpg', 'dumb.json', 'build.js', 'img/big.jpg', 'test_files.zip');
 
     loader.onProgress = function(percent, loaded, total) {
         console.log(percent, loaded, total);
@@ -177,11 +177,13 @@ window.runOS2D = function() {
         console.log('complete!')
     }
 
-    loader.start();
+    loader.start();*/
 
     var game = recreateGame();
     //var game = loadFromJSON();
     game.process(0);
+
+    return game;
 }
 
-window.runOS2D();
+//window.runOS2D();

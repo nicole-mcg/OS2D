@@ -68,7 +68,7 @@ export default class StateController extends Component {
 
 }
 
-export class State {
+class State {
 
     //Name should be string, state should be an object
     constructor(name, state={}) {
@@ -94,3 +94,5 @@ export class State {
     }
 
 }
+
+StateController.State = State;

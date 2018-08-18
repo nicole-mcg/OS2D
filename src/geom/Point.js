@@ -37,6 +37,15 @@ export default class Point extends Map {
         return new Point(this.x * scalar, this.y * scalar);
     }
 
+    rotate(origin, angle) {
+        var newP = new Point(this.x - origin.x, this.y - origin.y)
+
+        return new Point(
+            newP.x * Math.cos(angle) - newP.y * Math.sin(angle) + origin.x,
+            newP.y * Math.cos(angle) + newP.x * Math.sin(angle) + origin.y
+        );
+    }
+
     _toJSON() {
         return JSON.stringify({x: this.x, y: this.y});
     }

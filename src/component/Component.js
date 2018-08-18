@@ -169,7 +169,7 @@ export default class Component {
                    
     }
 
-    static createComponent(componentName, params) {
+    static createComponent(componentName, params, forceCreation=true) {
         componentName = componentName.toLowerCase();
 
         if (params === undefined || params === null) {
@@ -204,7 +204,7 @@ export default class Component {
                 continue;
             }
 
-            if (key !== 'enabled') {
+            if (key !== 'enabled' && !forceCreation) {
                 if (!Component.validateParam(key, params, validParams)) {
                     throw "Error: invalid param (incorrect name or type): name=" + key + " type=" + (typeof value) + (validParams[key] ? " should be type: " + validParams[key] : "");
                     continue;
@@ -228,7 +228,7 @@ export default class Component {
                     continue;
                 }
 
-                if (!Component.validateParam(paramName, defaultParams, validParams)) {
+                if (!forceCreation && !Component.validateParam(paramName, defaultParams, validParams)) {
                     throw "Error: invalid default param (incorrect name or type): name=" + paramName + " type=" + (typeof defaultParams[paramName]) + (validParams[paramName] ? " should be type: " + validParams[paramName] : "");
                     continue;
                 }

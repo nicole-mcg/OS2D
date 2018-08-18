@@ -6,10 +6,10 @@ import { deepSerialize } from "../../tools/Serialize.js"
 
 export default class RegularPolygon extends Shape {
 
-    constructor(numSides, size, vertices=null) {
+    constructor(numSides, diameter, vertices=null) {
         super("regularpolygon", {
             numSides: numSides,
-            size: size,
+            diameter: diameter,
             vertices: vertices != null ? vertices : function() {
                 var vertices = [];
 
@@ -19,7 +19,7 @@ export default class RegularPolygon extends Shape {
                 var sliceAngle = Math.PI*2 / numSides;
                 var internalAngle = (numSides - 2) * Math.PI / (numSides * 2);
 
-                var distance = size / 2;
+                var distance = diameter / 2;
                 var currAngle = Math.PI/2;
 
                 for (var i = 0; i < numSides; i++) {
@@ -30,15 +30,15 @@ export default class RegularPolygon extends Shape {
 
                     currAngle += sliceAngle;
                 }
-
+                
                 return vertices;
-            }
-        }());
+            }()
+        });
 
         if (this.numSides === undefined || this.numSides === null || 
-            this.size === undefined || this.size === null ||
+            this.diameter === undefined || this.diameter === null ||
             this.vertices === undefined || this.vertices === null || this.vertices.length === 0) {
-            throw "Invalid RegularPolygon: numSides=" + this.numSides + " size=" + this.size + (this.vertices ? " numVertices=" + this.vertices.length : "");
+            throw "Invalid RegularPolygon: numSides=" + this.numSides + " size=" + this.diameter + (this.vertices ? " numVertices=" + this.vertices.length : "");
         }
 
         super.toJSON = this._toJSON;
@@ -49,8 +49,8 @@ export default class RegularPolygon extends Shape {
         return this.get("numSides");
     }
 
-    get size() {
-        return this.get("size");
+    get diameter() {
+        return this.get("diameter");
     }
 
     contains(pos, rotation, otherPos) {
@@ -76,10 +76,6 @@ export default class RegularPolygon extends Shape {
             q[i] = new Point(tmp.x * c - tmp.y * s, -tmp.x * s - tmp.y * c);
         }
 
-        //this.q = q;
-
-        //console.log(distanceFromCenter)
-
         var distanceFromCenter = Point.distance(p0, p);
 
         for (var i = 0; i < q.length; i++) {
@@ -93,17 +89,14 @@ export default class RegularPolygon extends Shape {
         return true;
     }
 
-    draw(ctx, x, y, rotation, scaleRatio) {
+    draw(ctx, pos, rotation, scaleRatio) {
         var numSides = this.numSides;
-        var size = this.size;
+        var size = this.diameter;
         var vertices = this.vertices;
 
-        
-  
         ctx.beginPath();
 
-
-        ctx.moveTo((vertices[0].x + x) / scaleRatio, (vertices[0].y + y) / scaleRatio);
+        ctx.moveTo((vertices[0].x + pos.x) / scaleRatio, (vertices[0].y + pos.y) / scaleRatio);
         var c = Math.cos(-rotation);
         var s = Math.sin(-rotation);
         for (var i = 0; i < numSides; i++) {
@@ -111,21 +104,10 @@ export default class RegularPolygon extends Shape {
             
             var p2 = new Point(p.x * c - p.y * s, p.x * s + p.y * c);
 
-            ctx[i == 0 ? "moveTo" : "lineTo"]((p2.x + x) / scaleRatio, (p2.y + y) / scaleRatio);
+            ctx[i == 0 ? "moveTo" : "lineTo"]((p2.x + pos.x) / scaleRatio, (p2.y + pos.y) / scaleRatio);
         }
 
         ctx.closePath();
-
-        
-
-        /*if (this.q !== undefined && this.q !== null) {
-            var fill = ctx.fillStyle;
-            ctx.fillStyle = "green";
-            for (var i = 0; i < this.q.length; i++) {
-                ctx.fillRect((this.q[i].x + x) / scaleRatio - 1, (this.q[i].y + y) / scaleRatio - 1, 3, 3)
-            }
-            ctx.fillStyle = fill;
-        }*/
     }
 
     getRotated(rotation) {
@@ -139,7 +121,7 @@ export default class RegularPolygon extends Shape {
             newVertices.push(new Point(v.x * c - v.y * s, v.x * s + v.y * c));
         })
 
-        var newShape = new RegularPolygon(this.numSides, this.size, newVertices);
+        var newShape = new RegularPolygon(this.numSides, this.diameter, newVertices);
         
 
         return newShape;
@@ -149,7 +131,7 @@ export default class RegularPolygon extends Shape {
         return deepSerialize({
             type: this.type,
             numSides: this.numSides,
-            size: this.size,
+            diameter: this.diameter,
             vertices: this.vertices
         }, [], smartSerialize, isRoot, variables, blockWarning);
     }
@@ -165,7 +147,7 @@ export default class RegularPolygon extends Shape {
             }
         }
 
-        return new RegularPolygon(obj.numSides, obj.size, vertices);
+        return new RegularPolygon(obj.numSides, obj.diameter, vertices);
     }
 
     static initialize() {

@@ -50,6 +50,8 @@ export default class Game extends GameObjectContainer {
         this._hoveredObject = null;
         this._clickedObject = null;
 
+        this.shutdown = false;
+
         if (Game.classes) {
             Object.keys(Game.classes).forEach((key) => {
                 this[key] = Game.classes[key];
@@ -251,6 +253,10 @@ export default class Game extends GameObjectContainer {
     }
 
     requestFrame() {
+        if (this.shutdown) {
+            return;
+        }
+        
         window.requestAnimationFrame(this.process.bind(this))
     }
 

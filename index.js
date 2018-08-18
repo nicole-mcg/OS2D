@@ -13,7 +13,7 @@ import Component from "./src/component/Component.js"
 import Collider from "./src/component/Collider.js"
 import PhysicsBody from "./src/component/PhysicsBody.js"
 import ShapeRenderer from "./src/component/ShapeRenderer.js"
-import StateController, State from "./src/component/StateController.js"
+import StateController from "./src/component/StateController.js"
 import Generator from "./src/component/Generator.js"
 import DragHandler from "./src/component/DragHandler.js"
 
@@ -59,7 +59,7 @@ os2d["Collider"] = Collider;
 os2d["PhysicsBody"] = PhysicsBody;
 os2d["ShapeRenderer"] = ShapeRenderer;
 os2d["StateController"] = StateController;
-os2d["State"] = State;
+os2d["State"] = StateController.State;
 os2d["Generator"] = Generator;
 os2d["DragHandler"] = DragHandler;
 

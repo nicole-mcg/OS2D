@@ -4,7 +4,7 @@ import Component from "../component/Component.js"
 import GameObject from "../object/GameObject.js"
 
 const IMMUTABLE_TYPES = [
-    [Shape, [{type: "regularpolygon"}, 'numSides', 'size'], ["type", "vertices"]],
+    [Shape, [{type: "regularpolygon"}, 'numSides', 'diameter'], ["type", "vertices"]],
     [Point, ["x", "y"]]
 ];
 const SERIALIZABLE_TYPES = [
@@ -196,10 +196,12 @@ export function deepSerialize(obj, keysToIgnore=[], smartSerialize=false, isRoot
         string = "{" + string + "}";
     }
 
-    if (smartSerialize && isRoot) {
-        return {
-            json: string,
-            functions: functions
+    if (smartSerialize) {
+        if (isRoot) {
+            return {
+                json: string,
+                functions: functions
+            }
         }
     }
 
@@ -247,6 +249,8 @@ export function setProperties(obj, properties, toIgnore=[]) {
 
         obj[keys[i]] = currObj;
     }
+
+    return obj;
 }
 
 export function deserializeVariables(obj, functions={}) {

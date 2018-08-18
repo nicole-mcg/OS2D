@@ -7,7 +7,6 @@ export default class Collider extends Component {
 
     constructor(params) {
         super(Collider.componentName, "collider", params);
-
     }
 
     onAdd(game, gameObject) {

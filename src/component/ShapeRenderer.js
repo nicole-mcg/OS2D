@@ -18,7 +18,7 @@ export default class ShapeRenderer extends Component {
         if (this.shape != null) {
             
             var pos = this.gameObject.drawPos;
-            this.shape.draw(ctx, pos.x, pos.y, this.gameObject.rotation, game.scaleRatio);
+            this.shape.draw(ctx, pos, this.gameObject.rotation, game.scaleRatio);
             ctx.fill();
 
             if (this.outlineWidth != 0) {

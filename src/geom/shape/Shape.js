@@ -6,11 +6,13 @@ import { deepSerialize, setProperties } from "../../tools/Serialize.js"
 
 export default class Shape extends Map {
 
-    constructor(type, params) {
+    //Collision priority represents with Shape should test collision
+    //Collision will be testing with the shape with higher priority
+    constructor(type, params, collisionPriority=0) {
         super(setProperties({
-            type: type
-        }, params));
-        //console.log(this.vertices)
+            type: type,
+            collisionPriority: collisionPriority
+        }, params), true);
 
         super.toJSON = this._toJSON;
         this.toJSON = this._toJSON;
@@ -20,24 +22,65 @@ export default class Shape extends Map {
         return this.get("type");
     }
 
-    get vertices() {
-        return this.get("vertices").toArray();
-    }
-
-    // Abstract
-    _getVertices() {
-        return null;
+    get collisionPriority() {
+        return this.get('collisionPriority');
     }
 
     // Abstract
     // Should draw from centre
-    draw(ctx, x, y, rotation, scaleRatio) {
+    draw(ctx, pos, rotation, scaleRatio) {
         console.err("Shape.draw should be implemented by extending class.")
     }
 
     // Abstract
     contains(pos, rot, otherPos) {
         return false;
+    }
+
+    collides(pos, rot, otherShape, pos2, rot2) {
+
+
+        var toCheck, checkRot, checkPos;
+        var other, otherRot, otherPos;
+
+
+        if (this.collisionPriority > otherShape.collisionPriority) {
+            toCheck = this;
+            other = otherShape;
+
+            checkRot = rot;
+            otherRot = rot2;
+
+            checkPos = pos;
+            otherPos = pos2;
+        } else {
+            toCheck = otherShape
+            other = this;
+
+            checkRot = rot2;
+            otherRot = rot;
+
+            checkPos = pos2;
+            otherPos = pos;
+        }
+
+        var vertices = other.vertices;
+        var collides = false;
+
+        if (vertices) {
+            for (var i = 0; i < vertices.length; i++) {
+                if (toCheck.contains(checkPos, checkRot, otherPos)) {
+                    collides = true;
+                    break;
+                }
+            }
+        }
+
+        return collides;
+    }
+
+    get vertices() {
+       return this.get('vertices') 
     }
 
     // Abstract

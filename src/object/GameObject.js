@@ -65,7 +65,7 @@ export default class GameObject extends GameObjectContainer {
             return new Point(0, 0);
         }
 
-        if (fixedPosition) {
+        if (this.fixedPosition) {
             var pos = this.pos;
             if (this.parent && this.parent.fixedPosition) {
                 pos = pos.add(this.parent.drawPos);

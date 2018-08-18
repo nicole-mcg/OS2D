@@ -2,7 +2,8 @@
 require('jest')
 require('jest-canvas-mock')
 var os2d = require('../../../index.js');
-os2d = os2d.os2d
+os2d = os2d.default;
+
 
 test('tests deepSerialize smartSerialize=false', () => {
     var warn = console.warn;
@@ -93,7 +94,7 @@ test('tests deserializeVariables', () => {
             $0: {
                 type: 'regularpolygon',
                 numSides: 3,
-                size: 1
+                diameter: 1
             },
             $1: {
                 x: 50,
@@ -277,7 +278,7 @@ function createTemplates(obj) {
             value: {
                 type: 'regularpolygon',
                 numSides: 4,
-                size: 0.5,
+                diameter: 0.5,
             }
         },
         '$2': {
