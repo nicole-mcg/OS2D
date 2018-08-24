@@ -8,6 +8,8 @@ import GameObjectContainer from "./src/object/GameObjectContainer.js"
 import Point from "./src/geom/Point.js"
 import Shape from "./src/geom/shape/Shape.js"
 import RegularPolygon from "./src/geom/shape/RegularPolygon.js"
+import Circle from "./src/geom/shape/Circle.js"
+import Rectangle from "./src/geom/shape/Rectangle.js"
 
 import Component from "./src/component/Component.js"
 import Collider from "./src/component/Collider.js"
@@ -32,6 +34,8 @@ GameObject.initialize();
 
 Shape.initialize();
 RegularPolygon.initialize();
+Circle.initialize();
+Rectangle.initialize();
 
 //Initialize component classes
 Component.initialize();
@@ -52,6 +56,8 @@ os2d["GameObjectContainer"] = GameObjectContainer;
 os2d["Point"] = Point;
 os2d["Shape"] = Shape;
 os2d["RegularPolygon"] = RegularPolygon;
+os2d["Circle"] = Circle;
+os2d["Rectangle"] = Rectangle;
 
 os2d["Component"] = Component;
 os2d["createComponent"] = Component.createComponent;
@@ -78,5 +84,3 @@ Object.keys(os2d).forEach(function(key) {
 });
 
 export default os2d;
-
-console.log("worked");
