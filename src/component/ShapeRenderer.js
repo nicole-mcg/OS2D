@@ -13,6 +13,8 @@ export default class ShapeRenderer extends Component {
 
         if (this.color != null) {
             ctx.fillStyle = this.color;
+        } else {
+            ctx.fillStyle = 'red';
         }
 
         if (this.shape != null) {

@@ -7,7 +7,7 @@ import { deepSerialize } from "../../tools/Serialize.js"
 export default class RegularPolygon extends Shape {
 
     constructor(numSides, diameter, vertices=null) {
-        super("regularpolygon", {
+        super({
             numSides: numSides,
             diameter: diameter,
             vertices: vertices != null ? vertices : function() {
@@ -16,11 +16,12 @@ export default class RegularPolygon extends Shape {
                 var x = 0;
                 var y = 0;
 
-                var sliceAngle = Math.PI*2 / numSides;
-                var internalAngle = (numSides - 2) * Math.PI / (numSides * 2);
+                var sliceAngle = Math.PI * 2 / numSides;
+                var sideLength = Math.tan(sliceAngle / 2) * (diameter / 2) * 2;
+                var distance = sideLength / 2 / Math.sin(sliceAngle / 2)
+                //var distance = diameter / 2;
 
-                var distance = diameter / 2;
-                var currAngle = Math.PI/2;
+                var currAngle = Math.PI / 2;
 
                 for (var i = 0; i < numSides; i++) {
                     x = distance * Math.cos(-currAngle);
@@ -43,6 +44,10 @@ export default class RegularPolygon extends Shape {
 
         super.toJSON = this._toJSON;
         this.toJSON = this._toJSON;
+    }
+
+    get type() {
+        return "regularpolygon";
     }
 
     get numSides() {

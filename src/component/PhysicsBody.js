@@ -3,8 +3,45 @@ import Component from "./Component.js"
 import planck from "planck-js"
 
 import Point from "../geom/Point.js"
+import RegularPolygon from "../geom/shape/RegularPolygon.js"
+import Circle from "../geom/shape/Circle.js"
+import Rectangle from "../geom/shape/Rectangle.js"
 
 import { deepSerialize } from "../tools/Serialize.js"
+
+function verticesToPlank(vertices) {
+    return vertices.map((vertex) => {
+        var vec = new planck.Vec2()
+        vec.set(vertex.x, -vertex.y);
+        return vec;
+    })
+}
+
+// key = Shape class
+// value = function that generates an array of params for Planck class
+const SHAPES_TO_PLANCK = {
+    circle: (circle) => {return {
+        class: planck.Circle,
+        params: [circle.radius]
+    }},
+    rectangle: (rectangle) => {return {
+        class: planck.Polygon,
+        params: [
+            verticesToPlank(rectangle.vertices),
+            rectangle.vertices.length
+        ]
+    }},
+    regularpolygon: (regularPolygon) => {
+        return {
+            class: planck.Polygon,
+            params: [
+                verticesToPlank(regularPolygon.vertices),
+                regularPolygon.vertices.length
+            ]
+        }
+    },
+
+}
 
 export default class PhysicsBody extends Component {
 
@@ -22,7 +59,7 @@ export default class PhysicsBody extends Component {
         this.collider = gameObject.getComponent("collider");
         var collider = this.collider;
 
-        if (collider && collider.shape) {
+        if (collider && collider.shape && !this.body) {
             this.shape = collider.shape;
 
             var bodyDef = {};
@@ -31,14 +68,23 @@ export default class PhysicsBody extends Component {
 
             var body = game.world.createBody(bodyDef);
 
-            var planckVertices = [];
-            this.shape.vertices.forEach((vertex) => {
-                var vec = new planck.Vec2()
-                vec.set(vertex.x, -vertex.y);
-                planckVertices.push(vec)
+            var shapeToPlank = null;
+
+            Object.keys(SHAPES_TO_PLANCK).every((shapeType) => {
+
+                if (this.shape.type === shapeType) {
+                    shapeToPlank = SHAPES_TO_PLANCK[shapeType](this.shape);
+                    return false;
+                }
+
+                return true;
             })
 
-            var planckShape = new planck.Polygon(planckVertices, planckVertices.length);
+            if (!shapeToPlank) {
+                console.warn('Invalid shape used in PhysicsBody');
+                return;
+            }
+            var planckShape = new shapeToPlank['class'](...shapeToPlank.params);
 
             var fixtureDef = {};
             fixtureDef.shape = planckShape;
@@ -92,7 +138,7 @@ export default class PhysicsBody extends Component {
         PhysicsBody.validParams = {
             "friction": 'number',
             "density": 'number',
-            "bodyType": ["dynamic", "static"],
+            "bodyType": ["dynamic", "static", "kinematic"],
         };
         PhysicsBody.defaultParams = {
             "friction": 0.3,

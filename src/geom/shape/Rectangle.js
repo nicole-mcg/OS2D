@@ -7,29 +7,22 @@ import { deepSerialize } from "../../tools/Serialize.js"
 export default class Rectangle extends Shape {
 
     constructor(width, height) {
-        super("rectangle", {
+        super({
             width: width,
-            height: height
+            height: height,
             vertices: (function() {
-                return [
-                    {
-                        x: -width / 2,
-                        y: height / 2
-                    },
-                    {
-                        x: width / 2,
-                        y: height / 2,
-                    },
-                    {
-                        x: width / 2,
-                        y: -height / 2
-                    },
-                    {
-                        x: -width / 2,
-                        y: -height / 2, 
-                    }
 
-                ]
+                var distance = Math.sqrt(Math.pow(width / 2, 2) + Math.pow(height / 2, 2));
+                var angle = Math.PI / 4;
+                var vertices = [];
+                for (var i = 0; i < 4; i++) {
+                    vertices.push(new Point(
+                        distance * Math.cos(-angle),
+                        -distance * Math.sin(-angle)
+                    ));
+                    angle += Math.PI / 2
+                }
+                return vertices;
             })()
         }, 5);
 
@@ -42,35 +35,48 @@ export default class Rectangle extends Shape {
         this.toJSON = this._toJSON;
     }
 
+    get type() {
+        return 'rectangle';
+    }
+
     get width() {
         return this.get("width");
     }
 
     get height() {
-        return this,get('height');
+        return this.get('height');
     }
 
     contains(pos, rotation, otherPos) {
         var rotatedPoint = otherPos.rotate(pos, rotation);
 
-        return rotatedPoint.x >= pos.x && rotatedPoint.y >= pos.y &&
-            rotatedPoint.x <= pos.x + this.width && rotatedPoint.y <= pos.y + this.height;
+        return rotatedPoint.x >= pos.x - this.width / 2 && rotatedPoint.y >= pos.y - this.height / 2 &&
+            rotatedPoint.x <= pos.x + this.width / 2 && rotatedPoint.y <= pos.y + this.height / 2;
     }
 
     draw(ctx, pos, rotation, scaleRatio) {
         var width = this.width;
         var height = this.height;
 
-        ctx.save();
 
-        ctx.translate(pos.x + width / 2, pos.y + height / 2);
+        var xOff = pos.x;
+        var yOff = pos.y;
+        ctx.translate(xOff / scaleRatio, yOff / scaleRatio);
 
         // rotate the rect
-        ctx.rotate(rotation);
+        ctx.rotate(-rotation);
 
-        ctx.rect(-width / 2, -height / 2, width, height);
-    
-        ctx.restore();
+        ctx.beginPath();
+
+        var x = -width / 2;
+        var y = -height / 2;
+        ctx.rect(x / scaleRatio, y / scaleRatio, width / scaleRatio, height / scaleRatio);
+
+        ctx.closePath();
+
+        ctx.rotate(rotation);    
+        ctx.translate(-xOff / scaleRatio, -yOff / scaleRatio);
+
     }
 
     getRotated(rotation) {

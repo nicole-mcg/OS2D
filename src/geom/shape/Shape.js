@@ -8,9 +8,8 @@ export default class Shape extends Map {
 
     //Collision priority represents with Shape should test collision
     //Collision will be testing with the shape with higher priority
-    constructor(type, params, collisionPriority=0) {
+    constructor(params, collisionPriority=0) {
         super(setProperties({
-            type: type,
             collisionPriority: collisionPriority
         }, params), true);
 
@@ -19,7 +18,7 @@ export default class Shape extends Map {
     }
 
     get type() {
-        return this.get("type");
+        return null;
     }
 
     get collisionPriority() {

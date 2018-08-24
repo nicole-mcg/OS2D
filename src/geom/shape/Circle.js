@@ -6,9 +6,10 @@ import { deepSerialize } from "../../tools/Serialize.js"
 
 export default class Circle extends Shape {
 
-    constructor(radius) {
-        super("circle", {
-            radius: radius,
+    constructor(diameter) {
+        super({
+            radius: diameter / 2,
+            diameter
         }, 10);
 
         if (this.radius === undefined || this.radius === null) {
@@ -19,16 +20,26 @@ export default class Circle extends Shape {
         this.toJSON = this._toJSON;
     }
 
+    get type() {
+        return 'circle';
+    }
+
     get radius() {
         return this.get("radius");
     }
 
+    get diameter() {
+        return this.get("diameter");
+    }
+
     contains(pos, rotation, otherPos) {
-        return pos.distance(otherPos) <= radius;
+        return pos.distance(otherPos) <= this.radius;
     }
 
     draw(ctx, pos, rotation, scaleRatio) {
-        ctx.arc(pos.x, pos.y, this.radius, 0, Math.PI*2);
+        ctx.beginPath();
+        ctx.arc(pos.x / scaleRatio, pos.y / scaleRatio, this.radius / scaleRatio, 0, Math.PI*2);
+        ctx.closePath();
     }
 
     getRotated(rotation) {
