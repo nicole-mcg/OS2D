@@ -13,7 +13,13 @@ module.exports = {
             {
                 exclude: /(node_modules)/,
                 test: /\.js$/,
-                loader: 'babel-loader'
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: ['env']
+                    }
+                },
+                resolve: { extensions: [".js"] }
             }
         ]
     },
