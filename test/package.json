@@ -6,16 +6,17 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "webpack": "webpack --watch",
-    "serve": "serve ."
+    "serve": "serve .",
+    "run": "webpack-serve"
   },
   "author": "",
   "devDependencies": {
-    "babel-env": "^2.4.1",
+    "babel-loader": "^7.1.5",
+    "babel-polyfill": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "webpack": "^4.11.0",
-    "webpack-cli": "^3.0.2"
+    "webpack-cli": "^3.0.2",
+    "webpack-serve": "^2.0.2"
   },
-  "dependencies": {
-    "babel-loader": "^7.1.4"
-  }
+  "dependencies": {}
 }

@@ -1,5 +1,5 @@
 @echo off
 
-call npm run serve
+call npm run-script run
 
 pause
