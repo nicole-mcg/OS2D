@@ -24,6 +24,7 @@ export default class Game extends GameObjectContainer {
 
         // Camera offset
         this._cameraPos = new Point(0, 0);
+        this._cameraZoom = 1;
 
         // Ratios for converting canvas pixels to screen pixels
         this._canvasWidthRatio = 0;
@@ -122,6 +123,10 @@ export default class Game extends GameObjectContainer {
         return new Point((p.x / this._canvasWidthRatio) - this._screenOffset.x, (p.y / this._canvasHeightRatio) - this._screenOffset.y);
     }
 
+    get hoveredObject() {
+        return this._hoveredObject;
+    }
+
 
     handleMouseMove(e) {
 
@@ -202,17 +207,27 @@ export default class Game extends GameObjectContainer {
 
         this.cursor = "default";
 
-        this._hoveredObject = null;
+
+        var hoveredObject = null;
         this._children.forEach((child) => {
+            if (hoveredObject !== null) return;
+
             var collider = child.getComponent("collider");
             var worldMouse = this.screenCoordToWorld(this.mousePos);
 
             // Mouse is inside collider
             if (collider != null && collider.shape != null && collider.shape.contains(child.pos, child.rotation, worldMouse)) {
-                this._hoveredObject = child;
+                if (child.onMouseOver && child !== this._hoveredObject) {
+                    //child.onMouseOver(this);
+                }
+                hoveredObject = child;
+            } else if (child === this._hoveredObject) {
+                child.onMouseOut && child.onMouseOut(this);
             }
 
         })
+
+        this._hoveredObject = hoveredObject;
 
         // Change cursor
         if (this._hoveredObject && (
@@ -262,7 +277,6 @@ export default class Game extends GameObjectContainer {
 
     draw(ctx) {
 
-
         super.predraw(this, ctx);
 
         super.draw(this, ctx);
@@ -298,8 +312,11 @@ export default class Game extends GameObjectContainer {
             !widthLarger ? (newHeight - height) / 2 : 0
         );
 
-        this._cameraPos = this.screenCoordToWorld(this._screenOffset);
+        var cameraSize = this.screenCoordToWorld(this.screenSize);
+        cameraSize = cameraSize.setY(-cameraSize.y);
 
+        this._cameraPos = this.screenCoordToWorld(this._screenOffset)
+            //.add(cameraSize.scale(0.5));
 
         this._canvasWidthRatio = trueWidth / newWidth;
         this._canvasHeightRatio = trueHeight / newHeight;

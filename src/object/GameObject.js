@@ -60,6 +60,10 @@ export default class GameObject extends GameObjectContainer {
         return this._pos.y;
     }
 
+    get hovered() {
+        return this.game.hoveredObject === this;
+    }
+
     get drawPos() {
         if (this.game == null) {
             return new Point(0, 0);
@@ -405,7 +409,8 @@ export default class GameObject extends GameObjectContainer {
 
     static initialize() {
         GameObject.eventFuncs = [
-            'onClick', 'onMouseDown', 'onMouseUp', 'onHover',
+            'onClick', 'onMouseDown', 'onMouseUp',
+            'onMouseOver', 'onMouseOut',
             'onDragStart', 'onDrag', 'onDragEnd',
             'onPreprocess', 'onProcess', 'onPostprocess',
             'onPredraw', 'onDraw', 'onPostdraw'

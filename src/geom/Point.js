@@ -46,6 +46,10 @@ export default class Point extends Map {
         );
     }
 
+    distance(other) {
+        return Point.distance(this, other);
+    }
+
     _toJSON() {
         return JSON.stringify({x: this.x, y: this.y});
     }
