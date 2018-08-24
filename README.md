@@ -1,4 +1,6 @@
 # OS2D
+Website: http://ossoftware.ca/portfolio#OS2D
+
 A JavaScript game engine
 
 ## Demo
@@ -14,9 +16,8 @@ A JavaScript game engine
     - Components are used to add functionality to GameObjects
     - Components have complete control over a GameObject in order to perform different functions
     
-- Shapes
+- Shapes (Circle, Rectangle, RegularPolygon)
   - Shapes are immutable and can be reused on different components, such as ShapeRenderer and Collider
-  - Currently only RegularPolygon
 - Serializable to JSON
   - Whole heirarchy Game->GameObject->Component->Shape->Point
   - Can serialize event listeners to JSON
