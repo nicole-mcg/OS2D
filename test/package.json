@@ -18,5 +18,7 @@
     "webpack-cli": "^3.0.2",
     "webpack-serve": "^2.0.2"
   },
-  "dependencies": {}
+  "dependencies": {
+    "ts-loader": "^4.5.0"
+  }
 }
