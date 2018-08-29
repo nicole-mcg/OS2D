@@ -82,7 +82,7 @@ export default class PhysicsBody extends Component {
 
             if (!shapeToPlank) {
                 console.warn('Invalid shape used in PhysicsBody');
-                return;
+                return false;
             }
             var planckShape = new shapeToPlank['class'](...shapeToPlank.params);
 
@@ -98,6 +98,8 @@ export default class PhysicsBody extends Component {
             this.body = body;
             this.fixture = fixture;
         }
+
+        return true;
     }
 
     onProcess(obj, game) {

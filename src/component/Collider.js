@@ -13,8 +13,12 @@ export default class Collider extends Component {
         var physicsBody = gameObject.getComponent("physicsbody");
 
         if (physicsBody && !physicsBody.collider) {
-            physicsBody.onAdd(game, gameObject);
+            if (!physicsBody.onAdd(game, gameObject)) {
+                gameObject.removeComponent('physicsbody');
+            }
         }
+
+        return true;
     }
 
     static fromJSON(json) {
