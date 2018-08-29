@@ -51,13 +51,18 @@ export default class Component {
         this._enabled = enabled;
     }
 
+    isType(type) {
+        return this.type === type;
+    }
+
     addedToGameObject(game, gameObject) {
         this._game = game;
         this._gameObject = gameObject;
         if (this.onAdd !== undefined && this.onAdd !== null) {
-            this.onAdd(game, gameObject);
+            return this.onAdd(game, gameObject);
         }
-        //console.log(this.toJSON());
+
+        return true;
     }
 
     removedFromGameObject() {
@@ -67,38 +72,41 @@ export default class Component {
     }
 
     preprocess(obj, game) {
-        if (this._enabled && this.onPreprocess !== undefined && this.onPreprocess !== null) {
-            this.onPreprocess(obj, game);
+        if (this._enabled) {
+            this .onPreprocess && this.onPreprocess(obj, game);
         }
     }
 
     process(obj, game) {
-        if (this._enabled && this.onProcess !== undefined && this.onProcess !== null) {
-            this.onProcess(obj, game);
+        if (this._enabled) {
+            this. onProcess && this.onProcess(obj, game);
         }
     }
 
     postprocess(obj, game) {
-        if (this._enabled && this.onPostprocess !== undefined && this.onPostprocess !== null) {
-            this.onPostprocess(obj, game);
+        if (this._enabled) {
+            this. onPostprocess && this.onPostprocess(obj, game);
         }
     }
 
     predraw(obj, game, ctx) {
-        if (this._enabled && this.onPredraw !== undefined && this.onPredraw !== null) {
-            this.onPredraw(obj, game, ctx);
+        if (this._enabled && !this.isType('camera')) {
+            this. onPredraw && this.onPredraw(obj, game, ctx);
         }
     }
 
     draw(obj, game, ctx) {
-        if (this._enabled && this.onDraw !== undefined && this.onDraw !== null) {
-            this.onDraw(obj, game, ctx);
+        // Avoid drawing the camera component as part of the game object
+        // This allows us to use `onDraw` for true camera functionality
+        //      while still allowing us to process it normally as a GameObject
+        if (this._enabled && !this.isType('camera')) {
+            this.onDraw && this.onDraw(obj, game, ctx);
         }
     }
 
     postdraw(obj, game, ctx) {
-        if (this._enabled && this.onPostdraw !== undefined && this.onPostdraw !== null) {
-            this.onPostdraw(obj, game, ctx);
+        if (this._enabled && !this.isType('camera')) {
+            this.onPostdraw && this.onPostdraw(obj, game, ctx);
         }
     }
 
