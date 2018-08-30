@@ -1,6 +1,5 @@
-import 'babel-polyfill';
-
-import os2d from '../index.js'
+const os2d = document.os2d; 
+console.log(document)
 
 window.runOS2D = function() {
 
