@@ -1,5 +1,4 @@
-const os2d = document.os2d; 
-console.log(document)
+const os2d = document.os2d;
 
 window.runOS2D = function() {
 
@@ -7,6 +6,14 @@ window.runOS2D = function() {
 
     var recreateGame = function() {
         var game = new os2d.Game(canvas, new os2d.Point(1536, 864), 0.01);
+
+        game.addGameObject(
+            os2d.GameObject.create({
+                components: {
+                    camera: {}
+                }
+            })
+        )
 
         var lastPos = new os2d.Point(0, 0);
         var mouseVelocity = new os2d.Point(0, 0);

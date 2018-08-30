@@ -14,8 +14,12 @@ export default class Camera extends Component {
         this.index = game.addCamera(this.gameObject);
     }
 
+    predraw(game, ctx) {}
+    draw(game, ctx) {}
+    postdraw(game, ctx) {}
+
     onPredraw(game, ctx) {
-        game._cameraRenderIndex = this.index;
+        game.cameraRenderIndex = this.index;
 
         game.predraw(game, ctx);
     }

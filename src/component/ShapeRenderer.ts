@@ -5,13 +5,17 @@ import Shape from "../geom/shape/Shape"
 export default class ShapeRenderer extends Component {
 
     shape : Shape;
-    color: string = 'blue';
-    outlineColor : string = 'black';
+    color: string;
+    outlineColor : string;
     outlineWidth : number;
 
     constructor(params) {
         super('shaperenderer', "renderer", params);
-       // super.onDraw = this._onDraw;
+
+        if (!this.color) {
+            this.color = 'blue';
+        }
+
     }
 
     onDraw(game, ctx) {
@@ -28,7 +32,7 @@ export default class ShapeRenderer extends Component {
             this.shape.draw(ctx, pos, this.gameObject.rotation, game.scaleRatio);
             ctx.fill();
 
-            if (this.outlineWidth != 0) {
+            if (this.outlineWidth != 0 && this.outlineColor) {
                 ctx.strokeStyle = this.outlineColor;
                 ctx.lineWidth = this.outlineWidth;
                 ctx.stroke();

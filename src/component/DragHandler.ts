@@ -22,17 +22,17 @@ export default class DragHandler extends Component {
         super("draghandler", "draghandler", params);
     }
 
-    onObjDragStart(obj, game) {
+    onObjDragStart(game) {
         this.dragging = true;
-        this.lastPos = obj.pos;
+        this.lastPos = this.gameObject.pos;
         this.lastVelocities = [];
     }
 
-    onObjDrag(obj, game) {
+    onObjDrag(game) {
 
-        obj.pos = game.screenCoordToWorld(game.mousePos);
+        this.gameObject.pos = game.screenCoordToWorld(game.mousePos);
 
-        var frameVel = obj.pos.subtract(this.lastPos);
+        var frameVel = this.gameObject.pos.subtract(this.lastPos);
         this.lastVelocities.push(frameVel);
 
         if (this.lastVelocities.length > DragHandler.MAX_VEL_FRAMES) {
@@ -45,15 +45,15 @@ export default class DragHandler extends Component {
         }
         this.mouseVelocity = this.mouseVelocity.scale(game.timeDelta/(this.lastVelocities.length));
 
-        this.lastPos = obj.pos;
+        this.lastPos = this.gameObject.pos;
     }
 
-    onObjDragEnd(obj, game) {
+    onObjDragEnd(game) {
         
         if (this.throwable) {
-            var physicsBody = obj.getComponent('physicsbody');
+            var physicsBody = this.gameObject.getComponent('physicsbody');
             if (physicsBody && physicsBody.bodyType === 'dynamic') {
-                obj.speed = this.mouseVelocity;
+                this.gameObject.speed = this.mouseVelocity;
             }
         }
         this.dragging = false;

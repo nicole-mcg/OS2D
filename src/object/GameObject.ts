@@ -11,22 +11,22 @@ import { deepSerialize, setProperties, loadFunctions } from "../tools/Serialize"
 
 export default class GameObject extends GameObjectContainer {
 
-    _game : Game;
-    _parent : GameObjectContainer;
+    _game : Game = null;
+    _parent : GameObjectContainer = null;
 
-    _pos : Point;
-    _rotation : number;
+    _pos : Point = new Point(0, 0);
+    _rotation : number = 0;
 
-    _width : number;
-    _height: number;
+    _width : number = 0;
+    _height: number = 0;
 
-    _speed : Point;
+    _speed : Point = new Point(0, 0);
 
-    _components : { [name: string]: Component };
+    _components : { [name: string]: Component } = {};
 
-    _state : any;
+    _state : any = {};
 
-    _fixedPosition : boolean;
+    _fixedPosition : boolean = false;
 
     onClick(game : Game) : void {}
     onMouseDown(game : Game) : void {};
@@ -48,25 +48,6 @@ export default class GameObject extends GameObjectContainer {
 
     constructor(params : {} = {}) {
         super();
-
-        // private variables
-
-        this._game = null;
-        this._parent = null;
-
-        this._pos = new Point(0, 0);
-        this._rotation = 0;
-
-        this._width = 0;
-        this._height = 0;
-
-        this._speed = new Point(0, 0);
-
-        this._components = {};
-
-        this._state = {};
-
-        this._fixedPosition = false;
 
         // public variables
         if (params) {

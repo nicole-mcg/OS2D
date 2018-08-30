@@ -52,7 +52,7 @@ export default class PhysicsBody extends Component {
 
     shape : Shape;
     forcePos : boolean;
-    bodyType : string = 'dynamic';
+    bodyType : string;
     friction : number = 0.3;
     density : number = 1;
 
@@ -66,6 +66,19 @@ export default class PhysicsBody extends Component {
         this.body = null;
         this.fixture = null;
 
+        if (!this.bodyType) {
+            this.bodyType = 'dynamic';
+        }
+
+        if (this.bodyType === 'dynamic') {
+            if (!this.friction) {
+                this.friction = 0.3;
+            }
+
+            if (!this.density) {
+                this.density = 1;
+            }
+        }
     }
 
     onAdd(game, gameObject) {

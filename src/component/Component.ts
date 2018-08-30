@@ -101,22 +101,19 @@ export default class Component {
     }
 
     predraw(game, ctx) {
-        if (this._enabled && !this.isType('camera')) {
+        if (this._enabled) {
             this.onPredraw(game, ctx);
         }
     }
 
     draw(game, ctx) {
-        // Avoid drawing the camera component as part of the game object
-        // This allows us to use `onDraw` for true camera functionality
-        //      while still allowing us to process it normally as a GameObject
-        if (this._enabled && !this.isType('camera')) {
+        if (this._enabled) {
             this.onDraw(game, ctx);
         }
     }
 
     postdraw(game, ctx) {
-        if (this._enabled && !this.isType('camera')) {
+        if (this._enabled) {
             this.onPostdraw(game, ctx);
         }
     }
@@ -179,12 +176,8 @@ export default class Component {
                    
     }
 
-    static createComponent(componentName, params, forceCreation=true) {
+    static createComponent(componentName : string, params : any = {}, forceCreation : boolean = true) {
         componentName = componentName.toLowerCase();
-
-        if (params === undefined || params === null) {
-            params = {};
-        }
 
         loadFunctions(params);
 

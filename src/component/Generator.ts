@@ -9,8 +9,8 @@ export default class Generator extends Component {
     numGenerated : number = 0;
     timeSaved : number = 0;
 
-    limit : number = 0;
-    delay : number = 1000;
+    limit : number;
+    delay : number;
 
     addToGame : boolean = true;
 

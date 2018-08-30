@@ -1,4 +1,4 @@
-import  {Map} from "extendable-immutable"
+import  {Map} from "../tools/ImmutableBase"
 
 export default class Point extends Map {
 

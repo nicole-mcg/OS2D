@@ -18,6 +18,7 @@ import ShapeRenderer from "./component/ShapeRenderer"
 import StateController from "./component/StateController"
 import Generator from "./component/Generator"
 import DragHandler from "./component/DragHandler"
+import Camera from "./component/Camera"
 
 import UI from "./tools/UI"
 import Loader from "./tools/Loader"
@@ -55,6 +56,7 @@ os2d["StateController"] = StateController;
 os2d["State"] = StateController.State;
 os2d["Generator"] = Generator;
 os2d["DragHandler"] = DragHandler;
+os2d["Camera"] = Camera;
 
 
 os2d["UI"] = UI;
@@ -72,7 +74,5 @@ Object.keys(os2d).forEach(function(key) {
 });
 
 (<any>document).os2d = os2d;
-
-console.log(document)
 
 export default os2d;

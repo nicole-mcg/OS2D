@@ -13,7 +13,7 @@ export default class Shape extends Map {
     constructor(params, collisionPriority=0) {
         super(setProperties({
             collisionPriority: collisionPriority
-        }, params), true);
+        }, params));
     }
 
     get type() {
