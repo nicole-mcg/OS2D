@@ -1,8 +1,8 @@
 
-import Shape from "./Shape.js"
-import Point from "../Point.js"
+import Shape from "./Shape"
+import Point from "../Point"
 
-import { deepSerialize } from "../../tools/Serialize.js" 
+import { deepSerialize } from "../../tools/Serialize" 
 
 export default class Circle extends Shape {
 
@@ -15,9 +15,6 @@ export default class Circle extends Shape {
         if (this.radius === undefined || this.radius === null) {
             throw "Invalid Circle: radius=" + this.radius;
         }
-
-        super.toJSON = this._toJSON;
-        this.toJSON = this._toJSON;
     }
 
     get type() {
@@ -46,7 +43,7 @@ export default class Circle extends Shape {
         return this;
     }
 
-    _toJSON(smartSerialize = false, isRoot = false, variables = {}, blockWarning=false) {
+    toJSON(smartSerialize = false, isRoot = false, variables = {}, blockWarning=false) {
         return deepSerialize({
             type: this.type,
             radius: this.radius

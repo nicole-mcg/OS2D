@@ -1,21 +1,36 @@
-import { deepSerialize, setProperties, loadFunctions } from "../tools/Serialize.js"
+
+import Game from '../Game'
+import GameObject from '../object/GameObject'
+
+import { deepSerialize, setProperties, loadFunctions } from "../tools/Serialize"
 
 export default class Component {
+
+    static components : any = {};
+
+    _name : string;
+    _type : string;
+
+    _game : Game;
+    _gameObject : GameObject;
+
+    _enabled : boolean;
+
+    onAdd(obj : GameObject, game : Game) {}
+
+    onPreprocess(game : Game) {}
+    onProcess(game : Game) {}
+    onPostprocess(game : Game) {}
+
+    onPredraw(game : Game, ctx : CanvasRenderingContext2D) {}
+    onDraw(game : Game, ctx : CanvasRenderingContext2D) {}
+    onPostdraw(game : Game, ctx : CanvasRenderingContext2D) {}
+
+    onRemove() {}
 
     constructor(name="", type="", params) {
         this._name = name.toLowerCase();
         this._type = type.toLowerCase();
-
-        /*this.onAdd = undefined;
-        this.onRemove = undefined;
-
-        this.onPreprocess = undefined;
-        this.onProcess = undefined;
-        this.onPostprocess = undefined;
-
-        this.onPredraw = undefined;
-        this.onDraw = undefined;
-        this.onPostdraw = undefined;*/
 
         setProperties(this, params);
 
@@ -23,8 +38,6 @@ export default class Component {
         this._gameObject = null;
 
         this._enabled = true;
-
-        //console.log(this.toJSON());
     }
 
     get name() {
@@ -66,47 +79,45 @@ export default class Component {
     }
 
     removedFromGameObject() {
-        if (this.onRemove !== undefined && this.onRemove !== null) {
-            this.onRemove();
-        }
+        this.onRemove();
     }
 
-    preprocess(obj, game) {
+    preprocess(game) {
         if (this._enabled) {
-            this .onPreprocess && this.onPreprocess(obj, game);
+            this.onPreprocess(game);
         }
     }
 
-    process(obj, game) {
+    process(game) {
         if (this._enabled) {
-            this. onProcess && this.onProcess(obj, game);
+            this.onProcess(game);
         }
     }
 
-    postprocess(obj, game) {
+    postprocess(game) {
         if (this._enabled) {
-            this. onPostprocess && this.onPostprocess(obj, game);
+            this.onPostprocess(game);
         }
     }
 
-    predraw(obj, game, ctx) {
+    predraw(game, ctx) {
         if (this._enabled && !this.isType('camera')) {
-            this. onPredraw && this.onPredraw(obj, game, ctx);
+            this.onPredraw(game, ctx);
         }
     }
 
-    draw(obj, game, ctx) {
+    draw(game, ctx) {
         // Avoid drawing the camera component as part of the game object
         // This allows us to use `onDraw` for true camera functionality
         //      while still allowing us to process it normally as a GameObject
         if (this._enabled && !this.isType('camera')) {
-            this.onDraw && this.onDraw(obj, game, ctx);
+            this.onDraw(game, ctx);
         }
     }
 
-    postdraw(obj, game, ctx) {
+    postdraw(game, ctx) {
         if (this._enabled && !this.isType('camera')) {
-            this.onPostdraw && this.onPostdraw(obj, game, ctx);
+            this.onPostdraw(game, ctx);
         }
     }
 
@@ -123,15 +134,6 @@ export default class Component {
             return componentClass.fromJSON(json);
         }
         
-    }
-
-    static initialize() {
-        Component.eventFuncs = [
-            'onAdd', 'onRemove',
-            'onPreprocess', 'onProcess', 'onPostprocess',
-            'onPredraw', 'onDraw', 'onPostdraw',
-        ];
-        Component.components = {};
     }
 
     static addComponent(componentClass) {
@@ -193,64 +195,11 @@ export default class Component {
             return;
         }
 
-        var validParams = componentClass.validParams;
-        //console.log(componentName, validParams, params);
+        return new componentClass(params);  
+    }
 
-        Object.keys(Component.eventFuncs).forEach((key) => {
-            validParams[Component.eventFuncs[key]] = Function;
-        })
-
-        var validParamKeys = Object.keys(validParams);
-        var paramKeys = Object.keys(params);
-
-        var acceptedParams = {};
-        for (var i = 0; i < paramKeys.length; i++) {
-            var key = paramKeys[i];
-            var value = params[key];
-
-            if (key === 'name' || key === 'type'){
-                continue;
-            }
-
-            if (key !== 'enabled' && !forceCreation) {
-                if (!Component.validateParam(key, params, validParams)) {
-                    throw "Error: invalid param (incorrect name or type): name=" + key + " type=" + (typeof value) + (validParams[key] ? " should be type: " + validParams[key] : "");
-                    continue;
-                }
-            }
-
-            
-
-            acceptedParams[key] = params[key];
-        }
-
-        //Fill any unfilled values with default values
-        var defaultParams = componentClass.defaultParams;
-        if (defaultParams) {
-            var defaultParamKeys = Object.keys(defaultParams);
-            for (var i = 0; i < defaultParamKeys.length; i++) {
-                var paramName = defaultParamKeys[i];
-
-
-                if (acceptedParams[paramName] !== undefined) {
-                    continue;
-                }
-
-                if (!forceCreation && !Component.validateParam(paramName, defaultParams, validParams)) {
-                    throw "Error: invalid default param (incorrect name or type): name=" + paramName + " type=" + (typeof defaultParams[paramName]) + (validParams[paramName] ? " should be type: " + validParams[paramName] : "");
-                    continue;
-                }
-
-
-                acceptedParams[paramName] = defaultParams[paramName];
-
-            }
-        }
-
-        return new componentClass(acceptedParams);
-    
-
-        
+    static registerComponent(componentName, componentClass) {
+        Component.components[componentName] = componentClass;
     }
 
 }

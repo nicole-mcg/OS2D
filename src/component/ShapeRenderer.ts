@@ -1,11 +1,16 @@
 
-import Component from "./Component.js"
-import Shape from "../geom/shape/Shape.js"
+import Component from "./Component"
+import Shape from "../geom/shape/Shape"
 
 export default class ShapeRenderer extends Component {
 
+    shape : Shape;
+    color: string = 'blue';
+    outlineColor : string = 'black';
+    outlineWidth : number;
+
     constructor(params) {
-        super(ShapeRenderer.componentName, "renderer", params);
+        super('shaperenderer', "renderer", params);
        // super.onDraw = this._onDraw;
     }
 
@@ -43,20 +48,6 @@ export default class ShapeRenderer extends Component {
         });
     }
 
-    static initialize() {
-        ShapeRenderer.componentName = "shaperenderer"
-        ShapeRenderer.validParams = {
-            "shape": Shape,
-            "color": null,
-            "outlineColor": null,
-            "outlineWidth": 'number'
-        };
-        ShapeRenderer.defaultParams = {
-            "color": "blue",
-            "outlineColor": "black",
-            "outlineWidth": 0,
-        }
-        Component.addComponent(ShapeRenderer);
-    }
-
 }
+
+Component.registerComponent('shaperenderer', ShapeRenderer);

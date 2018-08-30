@@ -1,13 +1,18 @@
 
-import Component from "./Component.js"
+import GameObject from "../object/GameObject"
+
+import Component from "./Component"
+import Collider from "./Collider"
+
 import planck from "planck-js"
 
-import Point from "../geom/Point.js"
-import RegularPolygon from "../geom/shape/RegularPolygon.js"
-import Circle from "../geom/shape/Circle.js"
-import Rectangle from "../geom/shape/Rectangle.js"
+import Point from "../geom/Point"
+import Shape from "../geom/shape/Shape"
+import RegularPolygon from "../geom/shape/RegularPolygon"
+import Circle from "../geom/shape/Circle"
+import Rectangle from "../geom/shape/Rectangle"
 
-import { deepSerialize } from "../tools/Serialize.js"
+import { deepSerialize } from "../tools/Serialize"
 
 function verticesToPlank(vertices) {
     return vertices.map((vertex) => {
@@ -45,10 +50,18 @@ const SHAPES_TO_PLANCK = {
 
 export default class PhysicsBody extends Component {
 
-    constructor(params) {
-        super(PhysicsBody.componentName, "physicsbody", params);
+    shape : Shape;
+    forcePos : boolean;
+    bodyType : string = 'dynamic';
+    friction : number = 0.3;
+    density : number = 1;
 
-        this.forcePos = false;
+    collider : Collider;
+    body : any;
+    fixture : any;
+
+    constructor(params) {
+        super('physicsbody', "physicsbody", params);
 
         this.body = null;
         this.fixture = null;
@@ -62,7 +75,7 @@ export default class PhysicsBody extends Component {
         if (collider && collider.shape && !this.body) {
             this.shape = collider.shape;
 
-            var bodyDef = {};
+            var bodyDef : any = {};
             bodyDef.position = new planck.Vec2(gameObject.x, gameObject.y);
             bodyDef.type = this.bodyType;
 
@@ -86,7 +99,7 @@ export default class PhysicsBody extends Component {
             }
             var planckShape = new shapeToPlank['class'](...shapeToPlank.params);
 
-            var fixtureDef = {};
+            var fixtureDef : any = {};
             fixtureDef.shape = planckShape;
             fixtureDef.density = this.density;
             fixtureDef.friction = this.friction;
@@ -102,11 +115,14 @@ export default class PhysicsBody extends Component {
         return true;
     }
 
-    onProcess(obj, game) {
+    onProcess(game) {
+        var obj : GameObject = this.gameObject;
+
         if (!this.collider) {
             if (obj.getComponent("collider")) {
-                onAdd(game, obj);
-                onProcess(game);
+                this.onAdd(game, obj);
+                this.onProcess(game);
+                return;
             }
             throw "error: GameObject must have a collider for physics processing";
         }
@@ -135,19 +151,6 @@ export default class PhysicsBody extends Component {
         });
     }
 
-    static initialize() {
-        PhysicsBody.componentName = "physicsbody";
-        PhysicsBody.validParams = {
-            "friction": 'number',
-            "density": 'number',
-            "bodyType": ["dynamic", "static", "kinematic"],
-        };
-        PhysicsBody.defaultParams = {
-            "friction": 0.3,
-            "density": 1,
-            "bodyType": "dynamic"
-        }
-        Component.addComponent(PhysicsBody);
-    }
-
 }
+
+Component.registerComponent('physicsbody', PhysicsBody);

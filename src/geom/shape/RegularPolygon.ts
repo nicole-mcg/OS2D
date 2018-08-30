@@ -1,8 +1,8 @@
 
-import Shape from "./Shape.js"
-import Point from "../Point.js"
+import Shape from "./Shape"
+import Point from "../Point"
 
-import { deepSerialize } from "../../tools/Serialize.js" 
+import { deepSerialize } from "../../tools/Serialize" 
 
 export default class RegularPolygon extends Shape {
 

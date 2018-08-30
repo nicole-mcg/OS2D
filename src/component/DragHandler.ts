@@ -1,20 +1,28 @@
 
-import Component from "./Component.js"
-import Point from "../geom/Point.js"
+import Component from "./Component"
+import Point from "../geom/Point"
 
 export default class DragHandler extends Component {
 
-    constructor(params) {
-        super(DragHandler.componentName, "draghandler", params);
+    static MAX_VEL_FRAMES = 2;
 
-        this.dragging = false;
-        this.mouseVelocity = new Point(0, 0);
-        this.lastVelocities = [];
-        this.lastPos = new Point(0, 0);  
+    private dragging : boolean;
+
+    mouseVelocity : Point = new Point(0, 0);
+    lastVelocities : Point[] = [];
+    lastPos : Point = new Point(0, 0);
+
+    throwable : boolean;
+
+    onDragStart() {}
+    onDrag() {}
+    onDragEnd() {}
+
+    constructor(params) {
+        super("draghandler", "draghandler", params);
     }
 
     onObjDragStart(obj, game) {
-
         this.dragging = true;
         this.lastPos = obj.pos;
         this.lastVelocities = [];
@@ -65,27 +73,10 @@ export default class DragHandler extends Component {
     static fromJSON(json) {
         var obj = (typeof json) == 'string' ? JSON.parse(json) : json;
 
-        return new ShapeRenderer({
-            shape: Shape.fromJSON(obj.shape),
-            color: obj.color,
-            outlineColor: obj.outlineColor,
-            outlineWidth: obj.outlineWidth
-        });
-    }
-
-    static initialize() {
-        DragHandler.componentName = "draghandler"
-        DragHandler.validParams = {
-            "onDragStart": Function,
-            "onDrag": Function,
-            "onDragEnd": Function,
-            "throwable": "boolean"
-        };
-        DragHandler.defaultParams = {
-            "throwable": false,
-        }
-        DragHandler.MAX_VEL_FRAMES = 2;
-        Component.addComponent(DragHandler);
+        return new DragHandler(obj);
     }
 
 }
+
+
+Component.registerComponent('draghandler', DragHandler);

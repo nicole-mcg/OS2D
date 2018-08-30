@@ -1,11 +1,50 @@
-import GameObjectContainer from "./object/GameObjectContainer.js"
-import GameObject from "./object/GameObject.js"
-import Point from "./geom/Point.js"
+import GameObjectContainer from "./object/GameObjectContainer"
+import GameObject from "./object/GameObject"
+import PhysicsBody from "./component/PhysicsBody"
+import Collider from "./component/Collider"
+import Point from "./geom/Point"
 import planck from "planck-js"
 
-import { deepSerialize, setProperties } from "./tools/Serialize.js"
+import Camera from './component/Camera'
+
+import { deepSerialize, setProperties } from "./tools/Serialize"
 
 export default class Game extends GameObjectContainer {
+
+    static classes : any;
+
+    _canvas : HTMLCanvasElement;
+
+    _screenSize : Point;
+    _scaleRatio : number;
+    _screenSizeRatio : number;
+    _screenOffset : Point;
+
+    _lastRender : number;
+    _timeDelta : number;
+    _time : number;
+
+    _cameraPos : Point;
+    _cameraZoom : number;
+
+    //TODO should be point
+    _canvasWidthRatio : number;
+    _canvasHeightRatio : number;
+
+    _mousePos : Point;
+
+    _world : any;
+
+    _state : any;
+
+    _dragging : boolean;
+    _hoveredObject : GameObject;
+    _clickedObject : GameObject;
+
+    _cameras : Camera[];
+    _cameraRenderIndex : number;
+
+    shutdown : boolean;
 
     constructor(canvas, screenSize, pixeltoUnitRatio) {
         super();
@@ -15,12 +54,12 @@ export default class Game extends GameObjectContainer {
         this._scaleRatio = pixeltoUnitRatio;
         this._screenSizeRatio = screenSize.x / screenSize.y;
 
+        // Game screen offset in pixels
+        this._screenOffset = new Point(0, 0);
+
         this._lastRender = 0;
         this._timeDelta = 0;
         this._time =  new Date().getTime();
-
-        // Game screen offset in pixels
-        this._screenOffset = new Point(0, 0);
 
         // Camera offset
         this._cameraPos = new Point(0, 0);
@@ -50,6 +89,9 @@ export default class Game extends GameObjectContainer {
         this._dragging = false;
         this._hoveredObject = null;
         this._clickedObject = null;
+
+        this._cameras = [];
+        this._cameraRenderIndex = 0; // The index of the camera that is currently rendering
 
         this.shutdown = false;
 
@@ -127,6 +169,21 @@ export default class Game extends GameObjectContainer {
         return this._hoveredObject;
     }
 
+    get cameras() {
+        return this._cameras.slice(0); // Pass a new array that contains the cameras (to preserve immutablility)
+    }
+
+    addCamera(cameraObj : GameObject) {
+        var camera = camera.getComponent('camera');
+
+        if (!camera) {
+            //TODO throw error
+            return;
+        }
+
+        this._cameras.push(camera);
+        return this._cameras.length - 1;
+    }
 
     handleMouseMove(e) {
 
@@ -135,12 +192,12 @@ export default class Game extends GameObjectContainer {
         if (this._clickedObject !== null) {
 
             if (!this._dragging) {
-                this._clickedObject.onDragStart && this._clickedObject.onDragStart(this._clickedObject, this);
+                this._clickedObject.onDragStart && this._clickedObject.onDragStart(this);
                 this._dragging = true;
                 return;
             }
 
-            this._clickedObject.onDrag && this._clickedObject.onDrag(this._clickedObject, this);
+            this._clickedObject.onDrag && this._clickedObject.onDrag(this);
         }
 
     }
@@ -149,12 +206,12 @@ export default class Game extends GameObjectContainer {
         if (this._hoveredObject !== null) {
             this._clickedObject = this._hoveredObject;
 
-            var physicsBody = this._clickedObject.getComponent("physicsbody");
+            var physicsBody : PhysicsBody = this._clickedObject.getComponent("physicsbody") as PhysicsBody;
             if (physicsBody !== null) {
                 physicsBody.forcePos = true;
             }
 
-            this._hoveredObject.onMouseDown && this._hoveredObject.onMouseDown(this._hoveredObject, this);
+            this._hoveredObject.onMouseDown && this._hoveredObject.onMouseDown(this);
         }
 
     }
@@ -163,25 +220,25 @@ export default class Game extends GameObjectContainer {
 
         if (this._clickedObject !== null ) {
 
-            var physicsBody = this._clickedObject.getComponent("physicsbody");
+            var physicsBody : PhysicsBody = this._clickedObject.getComponent("physicsbody") as PhysicsBody;
             if (physicsBody !== null) {
                 physicsBody.forcePos = false;
             }
 
             if (this._dragging) {
                 if (this._clickedObject != null) {
-                    this._clickedObject.onDragEnd && this._clickedObject.onDragEnd(this._clickedObject, this);
+                    this._clickedObject.onDragEnd && this._clickedObject.onDragEnd(this);
                     this._dragging = false;
                 }
             } else if (this._clickedObject === this._hoveredObject) {
-                this._clickedObject.onClick && this._clickedObject.onClick(this._clickedObject, this);
+                this._clickedObject.onClick && this._clickedObject.onClick(this);
             }
         }
 
         this._clickedObject = null;
 
         if (this._hoveredObject !== null) {
-            this._hoveredObject.onMouseUp && this._hoveredObject.onMouseUp(this._hoveredObject, this);
+            this._hoveredObject.onMouseUp && this._hoveredObject.onMouseUp(this);
         }
 
     }
@@ -209,10 +266,10 @@ export default class Game extends GameObjectContainer {
 
 
         var hoveredObject = null;
-        this._children.forEach((child) => {
+        this._children.forEach((child : GameObject) => {
             if (hoveredObject !== null) return;
 
-            var collider = child.getComponent("collider");
+            var collider : Collider = child.getComponent("collider") as Collider;
             var worldMouse = this.screenCoordToWorld(this.mousePos);
 
             // Mouse is inside collider
@@ -237,13 +294,6 @@ export default class Game extends GameObjectContainer {
         }
 
         this._world.step(1 / 60);
-
-        // iterate over bodies and fixtures
-        for (var body = this._world.getBodyList(); body; body = body.getNext()) {
-            for (var fixture = body.getFixtureList(); fixture; fixture = fixture.getNext()) {
-            // draw or update fixture
-            }
-        }
 
         var canvas = this._canvas;
         var ctx = canvas.getContext("2d")
@@ -277,11 +327,13 @@ export default class Game extends GameObjectContainer {
 
     draw(ctx) {
 
-        super.predraw(this, ctx);
+        this._cameras.forEach((camera) => {
+            camera.predraw(this, ctx);
 
-        super.draw(this, ctx);
+            camera.draw(this, ctx);
 
-        super.postdraw(this, ctx);
+            camera.postdraw(this, ctx);
+        })
 
     }
 
@@ -316,7 +368,7 @@ export default class Game extends GameObjectContainer {
         cameraSize = cameraSize.setY(-cameraSize.y);
 
         this._cameraPos = this.screenCoordToWorld(this._screenOffset)
-            //.add(cameraSize.scale(0.5));
+            .add(cameraSize.scale(0.5));
 
         this._canvasWidthRatio = trueWidth / newWidth;
         this._canvasHeightRatio = trueHeight / newHeight;

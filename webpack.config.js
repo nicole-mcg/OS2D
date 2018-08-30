@@ -3,23 +3,28 @@ var webpack = require('webpack');
 
 module.exports = {
     mode: 'production',
-    entry: './src/index.js',
+    entry: './src/index.ts',
     output: {
-        path: path.resolve(__dirname, ''),
+        path: path.resolve(__dirname, 'test/'),
         filename: 'index.js'
     },
     module: {
         rules: [
             {
                 exclude: /(node_modules)/,
-                test: /\.js$/,
-                use: {
-                    loader: 'babel-loader',
-                    options: {
-                        presets: ['env']
-                    }
-                },
-                resolve: { extensions: [".js"] }
+                test: /\.(ts|js)$/,
+                use: [
+                    {
+                        loader: 'babel-loader',
+                        options: {
+                            presets: ['env'],
+                        },
+                    },
+                    {
+                        loader: 'ts-loader',
+                    },
+                ],
+                resolve: { extensions: [".ts", ".js"] }
             }
         ]
     },

@@ -1,63 +1,73 @@
+import Game from '../Game'
+import GameObject from './GameObject'
+
+import Point from '../geom/Point'
 
 export default class GameObjectContainer {
+
+    _children : GameObject[];
     
     constructor() {
         this._children = [];
     }
 
-    addGameObject(gameObject) {
-        if (!(gameObject instanceof GameObjectContainer.GameObject)) {
-            console.log("Tried to add a child that's not a GameObject!", gameObject);
-            return;
-        }
+    get game() : Game {
+        return null
+    }
+
+    get fixedPosition() : boolean {
+        return true;
+    }
+
+    get drawPos() : Point {
+        return null
+    }
+
+    addGameObject(gameObject : GameObject) : void {
         
         this._children.push(gameObject);
 
         gameObject.parent = this;
     }
 
-    hasGameObject(gameObject) {
+    hasGameObject(gameObject : GameObject) : boolean {
         return this._children.includes(gameObject);
     }
 
-    preprocess(game) {
+    preprocess(game : Game) : void {
         this._children.forEach((child) => {
             child.preprocess(game);
         })
     }
 
-    process(game) {
+    process(game : Game) : void {
         this._children.forEach((child) => {
             child.process(game);
         })
     }
 
-    postprocess(game) {
+    postprocess(game : Game) : void {
         this._children.forEach((child) => {
             child.postprocess(game);
         })
     }
 
-    predraw(game, ctx) {
+    predraw(game : Game, ctx : CanvasRenderingContext2D) : void {
         this._children.forEach((child) => {
             child.predraw(game, ctx);
         })
     }
 
-    draw(game, ctx) {
+    draw(game : Game, ctx : CanvasRenderingContext2D) : void {
         this._children.forEach((child) => {
             child.draw(game, ctx);
         })
     }
 
-    postdraw(game, ctx) {
+    postdraw(game : Game, ctx : CanvasRenderingContext2D) : void {
         this._children.forEach((child) => {
             child.postdraw(game, ctx);
         })
-    }
-
-    static initialize(gameObjClass) {
-        GameObjectContainer.GameObject = gameObjClass;
     }
 
 }

@@ -4,9 +4,10 @@ export default class Point extends Map {
 
     constructor(x, y) {
         super({x: x, y: y});
+    }
 
-        super.toJSON = this._toJSON;
-        this.toJSON = this._toJSON;
+    get(paramName : string) {
+        return super.get(paramName)
     }
 
     get x() {
@@ -50,7 +51,7 @@ export default class Point extends Map {
         return Point.distance(this, other);
     }
 
-    _toJSON() {
+    toJSON() {
         return JSON.stringify({x: this.x, y: this.y});
     }
 

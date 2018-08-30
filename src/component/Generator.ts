@@ -1,17 +1,33 @@
 
-import Component from "./Component.js"
-import GameObject from '../object/GameObject.js'
+import Component from "./Component"
+import Game from '../Game'
+import GameObject from '../object/GameObject'
 
 export default class Generator extends Component {
 
+    lastGenerate : number = null;
+    numGenerated : number = 0;
+    timeSaved : number = 0;
+
+    limit : number = 0;
+    delay : number = 1000;
+
+    addToGame : boolean = true;
+
+    destroyOnComplete : boolean;
+
+    generateParams : any;
+
+    onGenerate(object : GameObject, game : Game, generator : Generator) {}
+    onComplete(game : Game) {}
+
     constructor(params) {
-        super(Generator.componentName, "generator", params);
-        this.lastGenerate = null;
-        this.numGenerated = 0;
-        this.timeSaved = 0;
+        super('generator', "generator", params);
     }
 
-    onProcess(obj, game) {
+    onProcess(game : Game) {
+        var obj : GameObject = this.gameObject;
+
         if (!this.lastGenerate) {
             this.lastGenerate = game.time;
             return;
@@ -20,16 +36,14 @@ export default class Generator extends Component {
         var timePassed = game.time - this.lastGenerate + this.timeSaved;
 
         while (timePassed > this.delay && (this.limit === 0 || this.numGenerated < this.limit)) {
-            var obj = GameObject.create(this.generateParams);
+            var newObj = GameObject.create(this.generateParams);
 
-            obj.pos = this._gameObject.pos;
+            newObj.pos = this._gameObject.pos;
 
-            if (this.onGenerate) {
-                this.onGenerate(obj, game, this);
-            }
+            this.onGenerate(newObj, game, this);
 
             if (this.addToGame) {
-                game.addGameObject(obj);
+                game.addGameObject(newObj);
             }
 
             this.numGenerated++;
@@ -67,25 +81,6 @@ export default class Generator extends Component {
         })
     }
 
-    static initialize() {
-        Generator.componentName = "generator";
-        Generator.validParams = {
-            "limit": 'number',
-            "delay": 'number',
-            "addToGame": 'boolean',
-            "destroyOnComplete": 'boolean',
-            "generateParams": Object,
-            "onGenerate": Function,
-            "onComplete": Function
-        };
-        Generator.defaultParams = {
-            "limit": 0,
-            "delay": 1000,
-            "addToGame": true,
-            "destroyOnComplete": false,
-            "generateParams": {},
-        };
-        Component.addComponent(Generator);
-    }
-
 }
+
+Component.registerComponent('generator', Generator);

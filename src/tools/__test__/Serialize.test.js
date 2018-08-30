@@ -1,7 +1,7 @@
 
 require('jest')
 require('jest-canvas-mock')
-var os2d = require('../../../index.js');
+var os2d = require('../../../index');
 os2d = os2d.default;
 
 
@@ -236,7 +236,7 @@ function testSmartSerialize(isRoot) {
     if (!isRoot) {
         expect(json).toEqual("{\"arr\":[{\"test\":\"arr works\"},\"here's a string\",\"$3\",7],\"obj\":{\"str\":\"obj works\",\"func\":\"$4\",\"num\":4},\"num\":0,\"bool\":true,\"json\":\"toJSON in deepSerialize works!\",\"point\":\"&5\"}");
     } else {
-        expect(json.json).toEqual("{\"arr\":[{\"test\":\"arr works\"},\"here\'s a string\",\"$1\",7],\"obj\":{\"str\":\"obj works\",\"func\":\"$2\",\"num\":4},\"num\":0,\"bool\":true,\"json\":\"toJSON in deepSerialize works!\",\"point\":\"&3\",\"variables\": {\"$3\":{\"x\":0,\"y\":0}}}");
+        expect(jsonon).toEqual("{\"arr\":[{\"test\":\"arr works\"},\"here\'s a string\",\"$1\",7],\"obj\":{\"str\":\"obj works\",\"func\":\"$2\",\"num\":4},\"num\":0,\"bool\":true,\"json\":\"toJSON in deepSerialize works!\",\"point\":\"&3\",\"variables\": {\"$3\":{\"x\":0,\"y\":0}}}");
         expect(json.functions).toEqual("var functions = {$1: function () {return \"arr.func\";},$2: function func() {return \"obj.func\";}};");
     }
 }

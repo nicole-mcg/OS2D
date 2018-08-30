@@ -1,16 +1,16 @@
 
-import Shape from "./Shape.js"
-import Point from "../Point.js"
+import Shape from "./Shape"
+import Point from "../Point"
 
-import { deepSerialize } from "../../tools/Serialize.js" 
+import { deepSerialize } from "../../tools/Serialize" 
 
 export default class Rectangle extends Shape {
 
-    constructor(width, height) {
+    constructor(width : number, height : number, vertices : Point[] =null) {
         super({
             width: width,
             height: height,
-            vertices: (function() {
+            vertices: vertices ? vertices : (function() {
 
                 var distance = Math.sqrt(Math.pow(width / 2, 2) + Math.pow(height / 2, 2));
                 var angle = Math.PI / 4;

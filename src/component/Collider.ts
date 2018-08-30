@@ -1,12 +1,14 @@
 
-import Component from "./Component.js"
-import Shape from "../geom/shape/Shape.js"
+import Component from "./Component"
+import Shape from "../geom/shape/Shape"
 import planck from "planck-js"
 
 export default class Collider extends Component {
 
+    shape : Shape;
+
     constructor(params) {
-        super(Collider.componentName, "collider", params);
+        super('collider', "collider", params);
     }
 
     onAdd(game, gameObject) {
@@ -27,12 +29,5 @@ export default class Collider extends Component {
         return new Collider({shape: Shape.fromJSON(obj.shape)});
     }
 
-    static initialize() {
-        Collider.componentName = "collider";
-        Collider.validParams = {
-            "shape": Shape
-        };
-        Component.addComponent(Collider);
-    }
-
 }
+Component.registerComponent('collider', Collider);

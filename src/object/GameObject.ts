@@ -1,13 +1,52 @@
-import GameObjectContainer from "./GameObjectContainer.js"
-import Component from "../component/Component.js"
 
-import Point from "../geom/Point.js"
+import Game from '../Game'
 
-import { deepSerialize, setProperties, loadFunctions } from "../tools/Serialize.js"
+import GameObjectContainer from "./GameObjectContainer"
+import Component from "../component/Component"
+import PhysicsBody from "../component/PhysicsBody"
+
+import Point from "../geom/Point"
+
+import { deepSerialize, setProperties, loadFunctions } from "../tools/Serialize"
 
 export default class GameObject extends GameObjectContainer {
 
-    constructor(params) {
+    _game : Game;
+    _parent : GameObjectContainer;
+
+    _pos : Point;
+    _rotation : number;
+
+    _width : number;
+    _height: number;
+
+    _speed : Point;
+
+    _components : { [name: string]: Component };
+
+    _state : any;
+
+    _fixedPosition : boolean;
+
+    onClick(game : Game) : void {}
+    onMouseDown(game : Game) : void {};
+    onMouseUp(game : Game) : void {};
+    onMouseOver(game : Game) : void {};
+    onMouseOut(game : Game) : void {};
+
+    onDragStart(game : Game) : void {};
+    onDrag(game : Game) : void {}; 
+    onDragEnd(game : Game) : void {};
+
+    onPreprocess(game : Game) : void {}; 
+    onProcess(game : Game) : void {}; 
+    onPostprocess(game : Game) : void {};
+
+    onPredraw(game : Game, ctx : CanvasRenderingContext2D) : void {}; 
+    onDraw(game : Game, ctx : CanvasRenderingContext2D) : void {}; 
+    onPostdraw(game : Game, ctx : CanvasRenderingContext2D) : void {};
+
+    constructor(params : {} = {}) {
         super();
 
         // private variables
@@ -36,35 +75,35 @@ export default class GameObject extends GameObjectContainer {
         
     }
 
-    get state() {
+    get state() : any {
         return this._state;
     }
 
-    get game() {
+    get game() : Game {
         return this._game;
     }
 
-    get parent() {
+    get parent() : GameObjectContainer {
         return this._parent;
     }
 
-    get pos() {
+    get pos() : Point {
         return this._pos;
     }
 
-    get x() {
+    get x() : number {
         return this._pos.x;
     }
 
-    get y() {
+    get y() : number {
         return this._pos.y;
     }
 
-    get hovered() {
+    get hovered() : boolean {
         return this.game.hoveredObject === this;
     }
 
-    get drawPos() {
+    get drawPos() : Point {
         if (this.game == null) {
             return new Point(0, 0);
         }
@@ -86,35 +125,35 @@ export default class GameObject extends GameObjectContainer {
         return pos;
     }
 
-    get fixedPosition() {
-
+    get fixedPosition() : boolean {
+        return this._fixedPosition;
     }
 
-    get rotation() {
+    get rotation() : number {
         return this._rotation;
     }
 
-    get width() {
+    get width() : number {
         return this._width;
     }
 
-    get height() {
+    get height() : number {
         return this._height;
     }
 
-    get speed() {
+    get speed() : Point {
         return this._speed;
     }
 
-    get xSpeed() {
+    get xSpeed() : number {
         return this.speed.x;
     }
 
-    get ySpeed() {
+    get ySpeed() : number {
         return this.speed.y;
     }
 
-    set game(game) {
+    set game(game : Game) {
         this._game = game;
         this._children.forEach((child) => {
             child.game = game;
@@ -125,7 +164,7 @@ export default class GameObject extends GameObjectContainer {
         })
     }
 
-    set parent(parent) {
+    set parent(parent : GameObjectContainer) {
         this._parent = parent;
 
         if (!parent.hasGameObject(this)) {
@@ -145,7 +184,7 @@ export default class GameObject extends GameObjectContainer {
     set pos(p) {
         this._pos = p;
 
-        var physicsBody = this.getComponent("physicsbody");
+        var physicsBody : PhysicsBody = this.getComponent("physicsbody") as PhysicsBody;
         if (physicsBody && physicsBody.body) {
             var pos = physicsBody.body.getPosition();
             pos.x = p.x;
@@ -173,7 +212,7 @@ export default class GameObject extends GameObjectContainer {
     set rotation(rotation) {
         this._rotation = rotation;
 
-        var physicsBody = this.getComponent("physicsbody");
+        var physicsBody : PhysicsBody = this.getComponent("physicsbody") as PhysicsBody;
         if (physicsBody && physicsBody.body) {
             physicsBody.body.setAngle(rotation);
         }
@@ -182,7 +221,7 @@ export default class GameObject extends GameObjectContainer {
     set speed(speed) {
         this._speed = speed;
 
-        var physicsBody = this.getComponent("physicsbody");
+        var physicsBody : PhysicsBody = this.getComponent("physicsbody") as PhysicsBody;
         if (physicsBody && physicsBody.body) {
             var vel = physicsBody.body.getLinearVelocity();
             vel.x = speed.x;
@@ -222,7 +261,7 @@ export default class GameObject extends GameObjectContainer {
         var comp = null
         if (component instanceof Component) {
             if (this._components[component.type] != null) {
-                console.err("Replacing existing component! " + component.type);
+                console.warn("Replacing existing component! " + component.type);
                 return;
             }
             
@@ -241,15 +280,15 @@ export default class GameObject extends GameObjectContainer {
 
         if (comp) {
             this._components[comp.type] = comp;
-            if (this._game != null) {
-                comp.addedToGameObject(game, this);
+            if (this.game != null) {
+                comp.addedToGameObject(this.game, this);
             }
         }
 
         return comp;  
     }
 
-    getComponent(componentName) {
+    getComponent(componentName) : any {
         var comp = this._components[componentName];
         return comp === undefined ? null : comp;
     }
@@ -267,7 +306,7 @@ export default class GameObject extends GameObjectContainer {
 
         // Preprocess
         if (this.onPreprocess !== undefined && this.onPreprocess != null) {
-            this.onPreprocess(this, game);
+            this.onPreprocess(game);
         }
 
         // Children preprocess
@@ -275,7 +314,7 @@ export default class GameObject extends GameObjectContainer {
 
         // Components preprocess
         Object.values(this._components).forEach((component) => {
-            component.preprocess(this, game);
+            component.preprocess(game);
         });
 
     }
@@ -285,12 +324,11 @@ export default class GameObject extends GameObjectContainer {
         var timeDelta = game.timeDelta;
 
         if (this.onProcess !== undefined && this.onProcess != null) {
-            this.onProcess(this, game);
+            this.onProcess(game);
         }
 
         if (!this.getComponent('physicsbody')) {
-            this._x += this.xSpeed * timeDelta;
-            this._y += this.ySpeed * timeDelta;
+            this.pos = new Point(this.xSpeed * timeDelta, this.ySpeed * timeDelta);
         }
 
         // Process children
@@ -298,7 +336,7 @@ export default class GameObject extends GameObjectContainer {
 
         // Components preprocess
         Object.values(this._components).forEach((component) => {
-            component.process(this, game);
+            component.process(game);
         });
 
     }
@@ -307,7 +345,7 @@ export default class GameObject extends GameObjectContainer {
 
         // Postprocess
         if (this.onPostprocess !== undefined && this.onPostprocess != null) {
-            this.onPostprocess(this, game);
+            this.onPostprocess(game);
         }
 
         // Children postprocess
@@ -323,7 +361,7 @@ export default class GameObject extends GameObjectContainer {
     predraw(game, ctx) {
 
         if (this.onPredraw !== undefined && this.onPredraw != null) {
-            this.onPredraw(this, game, ctx);
+            this.onPredraw(game, ctx);
         }
 
         // Children predraw
@@ -339,7 +377,7 @@ export default class GameObject extends GameObjectContainer {
     draw(game, ctx) {
 
         if (this.onDraw !== undefined && this.onDraw != null) {
-            this.onDraw(this, game, ctx);
+            this.onDraw(game, ctx);
         }
 
         // Draw children
@@ -354,7 +392,7 @@ export default class GameObject extends GameObjectContainer {
 
     postdraw(game, ctx) {
         if (this.onPostdraw !== undefined && this.onPostdraw != null) {
-            this.onPostdraw(this, game, ctx);
+            this.onPostdraw(game, ctx);
         }
 
         // Children postdraw
@@ -405,17 +443,6 @@ export default class GameObject extends GameObjectContainer {
 
     static create(params) {
         return GameObject.fromJSON(params);
-    }
-
-    static initialize() {
-        GameObject.eventFuncs = [
-            'onClick', 'onMouseDown', 'onMouseUp',
-            'onMouseOver', 'onMouseOut',
-            'onDragStart', 'onDrag', 'onDragEnd',
-            'onPreprocess', 'onProcess', 'onPostprocess',
-            'onPredraw', 'onDraw', 'onPostdraw'
-        ]
-
     }
 
 }

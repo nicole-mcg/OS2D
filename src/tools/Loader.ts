@@ -2,8 +2,20 @@
 
 export default class Loader {
 
-    constructor() {
-        this.filesToLoad = arguments;
+    private filesToLoad : string[];
+    private totalLength : number;
+
+    private files : string[] | HTMLImageElement[];
+    private isImage : boolean[];
+    private progress : number[];
+
+    private totalLoaded : number;
+
+    onComplete(files : string[] | HTMLImageElement[]) {}
+    onProgress(percentComplete : number, numBytesRecieved : number, totalBytes : number) {}
+
+    constructor(filesToLoad : string[]) {
+        this.filesToLoad = filesToLoad;
         this.totalLength = 0;
 
         //this.onProgressChanged = undefined

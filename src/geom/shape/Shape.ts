@@ -1,10 +1,12 @@
-import  {Map, List} from "extendable-immutable"
+import  {Map, List} from "../../tools/ImmutableBase"
 
-import Point from "../Point.js"
+import Point from "../Point"
 
-import { deepSerialize, setProperties } from "../../tools/Serialize.js"
+import { deepSerialize, setProperties } from "../../tools/Serialize"
 
 export default class Shape extends Map {
+
+    static registeredShapes : {} = {};
 
     //Collision priority represents with Shape should test collision
     //Collision will be testing with the shape with higher priority
@@ -12,9 +14,6 @@ export default class Shape extends Map {
         super(setProperties({
             collisionPriority: collisionPriority
         }, params), true);
-
-        super.toJSON = this._toJSON;
-        this.toJSON = this._toJSON;
     }
 
     get type() {
@@ -28,7 +27,7 @@ export default class Shape extends Map {
     // Abstract
     // Should draw from centre
     draw(ctx, pos, rotation, scaleRatio) {
-        console.err("Shape.draw should be implemented by extending class.")
+        console.warn("Shape.draw should be implemented by extending class.")
     }
 
     // Abstract
@@ -87,7 +86,7 @@ export default class Shape extends Map {
         return null;
     }
 
-    _toJSON(smartSerialize = false, isRoot = false, variables = {}, blockWarning=false) {
+    toJSON(smartSerialize = false, isRoot = false, variables = {}, blockWarning=false) {
         return deepSerialize({
             type: this.type,
             vertices: this.vertices,
@@ -114,7 +113,12 @@ export default class Shape extends Map {
         return true;
     }
 
-    static fromJSON(json) {
+    static fromJSON(json : any) {
+
+        if (json instanceof Shape) {
+            return json;
+        }
+
         var obj = (typeof json) == 'string' ? JSON.parse(json) : json;
 
         var shapeClass = Shape.registeredShapes[obj.type];
@@ -122,10 +126,6 @@ export default class Shape extends Map {
         if (shapeClass) {
             return shapeClass.fromJSON(json)
         }
-    }
-
-    static initialize() {
-        Shape.registeredShapes = {};
     }
 
     static registerShape(name, shapeClass) {

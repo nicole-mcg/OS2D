@@ -1,7 +1,7 @@
-import Shape from "../geom/shape/Shape.js"
-import Point from "../geom/Point.js"
-import Component from "../component/Component.js"
-import GameObject from "../object/GameObject.js"
+import Shape from "../geom/shape/Shape"
+import Point from "../geom/Point"
+import Component from "../component/Component"
+import GameObject from "../object/GameObject"
 
 const IMMUTABLE_TYPES = [
     [Shape, [{type: "regularpolygon"}, 'numSides', 'diameter'], ["type", "vertices"]],
@@ -10,7 +10,13 @@ const IMMUTABLE_TYPES = [
 const SERIALIZABLE_TYPES = [
     [Component, ["name", "type", "enabled"]],
 ]
-export function deepSerialize(obj, keysToIgnore=[], smartSerialize=false, isRoot=true, variables={}, blockWarning=false) {
+export function deepSerialize(
+        obj : any,
+        keysToIgnore : string[] = [],
+        smartSerialize : boolean = false,
+        isRoot : boolean = true, 
+        variables : any = {}, 
+        blockWarning : boolean =false) {
     var string = "";
 
     var getNextIndex = function(variables) {
@@ -32,13 +38,14 @@ export function deepSerialize(obj, keysToIgnore=[], smartSerialize=false, isRoot
             continue;
         }
 
-        var value = obj[keys[i]];
+        var value : any = obj[keys[i]];
         if (value === undefined || value === null) {
             continue;
         }
 
-        var valString = "";
-        var isString = false;
+        var valString : any = "";
+        var isString : boolean = false;
+        var index : any;
         if (value instanceof Function) {
             var funcString = value.toString();
             var valLines = funcString.split('\n')
@@ -53,10 +60,10 @@ export function deepSerialize(obj, keysToIgnore=[], smartSerialize=false, isRoot
 
             if (smartSerialize) {
                 !variables.functions && (variables.functions = {}); 
-                var index = Object.values(variables.functions).indexOf(funcString);
+                index = Object.values(variables.functions).indexOf(funcString);
                 if (index != -1) {
                     index = Object.keys(variables.functions)[index];
-                    valString = index;
+                    valString = index.toString();
                 } else {
                     index = getNextIndex(variables);
                     variables.functions['$' + index] = funcString;
@@ -78,18 +85,18 @@ export function deepSerialize(obj, keysToIgnore=[], smartSerialize=false, isRoot
 
             if (smartSerialize && !keys[i].includes("$") && !keys[i].includes("&")) {
                 for (var j = 0; j < IMMUTABLE_TYPES.length; j++) {
-                    var type = IMMUTABLE_TYPES[j][0];
+                    var type : any = IMMUTABLE_TYPES[j][0];
                     if (value instanceof type) {
 
-                        var  match = Object.values(variables).find((variable) => {
+                        var  match = Object.values(variables).find((variable : any) => {
                             return variable instanceof Object && variable.equals && variable.equals(value);
                         })
 
                         if (match) {
-                            var index =  Object.keys(variables)[Object.values(variables).indexOf(match)].replace("$", "&");
+                            index =  Object.keys(variables)[Object.values(variables).indexOf(match)].replace("$", "&");
                             valString = index;
                         } else {
-                            var index = getNextIndex(variables);
+                            index = getNextIndex(variables);
                             variables["$" + index] = value;
                             valString = "&" + index;
                             isString = true;
@@ -307,13 +314,13 @@ export function deserializeVariables(obj, functions={}) {
 
                 var typeMatch = false;
                 for (var i = 0; i < typeStructures.length; i++) {
-                    var toMatch = typeStructures[i];
+                    var toMatch : any = typeStructures[i];
 
                     var matchedAll = true;
-                    toMatch.forEach((typeVar) => {
+                    toMatch.forEach((typeVar : any) => {
 
                         if (typeVar instanceof Object) {
-                            Object.keys(typeVar).forEach((key) => {
+                            Object.keys(typeVar).forEach((key : any) => {
                                 if (!Object.keys(obj.variables[variableName]).includes(key) || obj.variables[variableName][key] !== typeVar[key]){
                                     matchedAll = false;
                                     return;
@@ -428,13 +435,13 @@ export function replaceVariables(obj, deserializedVariables) {
     })
 }
 
-export function loadFunctions(params, paramName) {
+export function loadFunctions(params, paramName : string = null) {
 
     if (!params) {
         return;
     }
 
-    var param = paramName !== undefined ? params[paramName] : params;
+    var param = paramName ? params[paramName] : params;
 
     if (!param) {
         return;
